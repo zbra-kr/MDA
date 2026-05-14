@@ -1,0 +1,108 @@
+# ================================================================
+# B.CAVE Competitor Radar - Local Stack
+#
+# Services:
+#   - worker:  Python 워커 (스크래퍼·LLM·발송), FastAPI 노출
+#   - ollama:  Qwen 2.5 14B + bge-m3 임베딩 호스팅
+#   - n8n:     워크플로우 스케줄러
+#
+# Prerequisites:
+#   - Docker 24+
+#   - NVIDIA GPU + nvidia-container-toolkit (Ollama용)
+#   - .env 파일 (.env.example 참조)
+#
+# Usage:
+#   docker compose up -d
+#   docker compose exec ollama ollama pull qwen2.5:14b-instruct-q4_K_M
+#   docker compose exec ollama ollama pull bge-m3
+#   docker compose logs -f worker
+# ================================================================
+
+services:
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    container_name: radar-worker
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - TZ=Asia/Seoul
+      - OLLAMA_HOST=http://ollama:11434
+    ports:
+      - "8000:8000"           # FastAPI (n8n 호출용)
+    volumes:
+      - ./worker:/app:rw      # 개발 편의 (운영 시 제거 권장)
+      - worker_logs:/app/logs
+      - worker_queue:/app/queue
+    depends_on:
+      ollama:
+        condition: service_healthy
+    networks: [radar]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: radar-ollama
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Seoul
+      - OLLAMA_KEEP_ALIVE=24h         # 모델 메모리 유지
+      - OLLAMA_NUM_PARALLEL=1         # 단일 요청 처리 (VRAM 보호)
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    networks: [radar]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: radar-n8n
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - TZ=Asia/Seoul
+      - GENERIC_TIMEZONE=Asia/Seoul
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD}
+      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=${N8N_WEBHOOK_URL:-http://localhost:5678/}
+      - NODE_ENV=production
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n/workflows:/workflows:ro
+    depends_on:
+      - worker
+    networks: [radar]
+
+volumes:
+  ollama_data:
+  worker_logs:
+  worker_queue:
+  n8n_data:
+
+networks:
+  radar:
+    driver: bridge

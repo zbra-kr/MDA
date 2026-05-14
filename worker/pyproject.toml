@@ -1,0 +1,79 @@
+[project]
+name = "bcave-competitor-radar-worker"
+version = "0.1.0"
+description = "Worker for B.CAVE Competitor Radar — scraping, detection, LLM analysis, publishing"
+requires-python = ">=3.12"
+readme = "../README.md"
+authors = [
+  { name = "B.CAVE IT Team", email = "it@bcave.co.kr" },
+]
+
+dependencies = [
+  # Scraping
+  "playwright==1.49.*",
+  "playwright-stealth>=1.0.6",
+
+  # HTTP & async
+  "httpx>=0.27",
+  "aiohttp>=3.10",
+  "tenacity>=8.2",
+
+  # Data
+  "pydantic>=2.6",
+  "pandas>=2.2",
+  "numpy>=1.26",
+  "scikit-learn>=1.5",
+  "Pillow>=10.3",
+  "imagehash>=4.3",
+
+  # Storage
+  "supabase>=2.7",
+  "snowflake-connector-python>=3.12",
+
+  # LLM
+  "ollama>=0.3",
+  "openai>=1.50",                  # Ollama OpenAI 호환 클라이언트로 사용
+
+  # Publishing
+  "jinja2>=3.1",
+  "premailer>=3.10",
+  "notion-client>=2.2",
+
+  # API server (n8n 호출용)
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.32",
+
+  # Logging
+  "loguru>=0.7",
+  "structlog>=24.1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3",
+  "pytest-asyncio>=0.24",
+  "pytest-mock>=3.14",
+  "ruff>=0.7",
+  "mypy>=1.13",
+  "ipython>=8.28",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["worker*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N", "SIM"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
