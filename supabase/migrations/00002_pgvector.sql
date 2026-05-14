@@ -4,11 +4,13 @@
 -- (ivfflat은 데이터 충분할 때 만드는 것이 정확도 좋음)
 -- ============================================================
 
+
 -- 벡터 인덱스 (cosine distance)
 -- lists 값은 sqrt(row_count) 추천. 1만 row면 100. 데이터 증가 시 reindex.
 create index products_embedding_idx
   on products using ivfflat (embedding vector_cosine_ops)
   with (lists = 100);
+
 
 -- 자사 상품 매칭 함수
 -- 사용 예:
@@ -49,7 +51,8 @@ as $$
       then round(100.0 * (p.list_price - comp.list_price) / comp.list_price, 1)
       else null
     end as price_diff_pct
-  from products p, comp
+  from products p
+  cross join comp
   join brands b on b.id = p.brand_id
   where b.is_own = true
     and p.id != competitor_id
@@ -58,6 +61,7 @@ as $$
   order by similarity desc
   limit match_count;
 $$;
+
 
 comment on function match_own_products is
   '경쟁상품 ID로 자사 상품 Top N 매칭. cosine similarity 기반. embedding 인덱스 활용.';

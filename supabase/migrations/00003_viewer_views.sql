@@ -15,12 +15,22 @@
 -- require the `authenticated` role.
 -- ============================================================
 
+
 -- -----------------------------------------------------------------
 -- 1. v_today_findings
 -- One row per anomaly detected on the latest report date, joined to
 -- product, brand, latest snapshot, and match counts.  This is the
 -- workhorse of the dashboard table + the AI insight rail.
 -- -----------------------------------------------------------------
+
+-- ============================================================
+-- 00001_init.sql에 있던 임시 helper 객체 정리
+-- (00003의 풀 버전으로 대체. 이름이 겹쳐 create or replace 불가)
+-- ============================================================
+
+drop view if exists v_today_findings;
+drop function if exists f_product_trend(uuid, int);
+
 create or replace view v_today_findings as
 with latest_report as (
   select report_date from daily_reports order by report_date desc limit 1
@@ -77,8 +87,10 @@ left join prev_snapshot   ps on ps.product_id = p.id
 left join match_counts    mc on mc.competitor_product_id = p.id
 where a.detected_on = (select report_date from latest_report);
 
+
 grant select on v_today_findings to anon;
 grant select on v_today_findings to authenticated;
+
 
 -- -----------------------------------------------------------------
 -- 2. v_pipeline_today
@@ -89,19 +101,21 @@ grant select on v_today_findings to authenticated;
 -- -----------------------------------------------------------------
 create or replace view v_pipeline_today as
 select
-  s ->> 'name'                  as stage_name,
-  s ->> 'status'                as status,
-  (s ->> 'started_at')::timestamptz as started_at,
-  (s ->> 'ended_at')::timestamptz   as ended_at,
-  ((s ->> 'ended_at')::timestamptz - (s ->> 'started_at')::timestamptz) as duration,
-  ordinality                    as stage_order
+  s.value ->> 'name'                        as stage_name,
+  s.value ->> 'status'                      as status,
+  (s.value ->> 'started_at')::timestamptz   as started_at,
+  (s.value ->> 'ended_at')::timestamptz     as ended_at,
+  ((s.value ->> 'ended_at')::timestamptz - (s.value ->> 'started_at')::timestamptz) as duration,
+  s.ordinality                              as stage_order
 from daily_reports r,
   lateral jsonb_array_elements(coalesce(r.stages, '[]'::jsonb)) with ordinality s
 where r.report_date = (select report_date from daily_reports order by report_date desc limit 1)
 order by stage_order;
 
+
 grant select on v_pipeline_today to anon;
 grant select on v_pipeline_today to authenticated;
+
 
 -- -----------------------------------------------------------------
 -- 3. f_severity_daily(start, end)
@@ -130,8 +144,10 @@ create or replace function f_severity_daily(
   order by d.date;
 $$;
 
+
 grant execute on function f_severity_daily(date, date) to anon;
 grant execute on function f_severity_daily(date, date) to authenticated;
+
 
 -- -----------------------------------------------------------------
 -- 4. f_product_trend(product_id, days)
@@ -167,8 +183,10 @@ create or replace function f_product_trend(
   order by snapshot_date;
 $$;
 
+
 grant execute on function f_product_trend(uuid, int) to anon;
 grant execute on function f_product_trend(uuid, int) to authenticated;
+
 
 -- -----------------------------------------------------------------
 -- 5. f_anomaly_kpis(anomaly_id)
@@ -241,8 +259,10 @@ returns table (
   left join matches on true;
 $$;
 
+
 grant execute on function f_anomaly_kpis(uuid) to anon;
 grant execute on function f_anomaly_kpis(uuid) to authenticated;
+
 
 -- -----------------------------------------------------------------
 -- 6. f_brand_trend(brand_ids[], metric, days)
@@ -263,6 +283,7 @@ begin
     raise exception 'invalid metric: %', p_metric;
   end if;
 
+
   return query execute format($q$
     select
       s.snapshot_date,
@@ -279,8 +300,10 @@ begin
 end;
 $$;
 
+
 grant execute on function f_brand_trend(uuid[], text, int) to anon;
 grant execute on function f_brand_trend(uuid[], text, int) to authenticated;
+
 
 -- -----------------------------------------------------------------
 -- 7. f_own_sku_status(own_sku)
@@ -295,6 +318,7 @@ create table if not exists own_sku_cache (
 );
 alter table own_sku_cache enable row level security;
 create policy "anon read own_sku_cache" on own_sku_cache for select to anon using (true);
+
 
 create or replace function f_own_sku_status(p_own_sku text)
 returns table (
@@ -318,13 +342,16 @@ returns table (
   where own_sku = p_own_sku;
 $$;
 
+
 grant execute on function f_own_sku_status(text) to anon;
 grant execute on function f_own_sku_status(text) to authenticated;
+
 
 
 -- =================================================================
 -- Write tables (require authenticated user)
 -- =================================================================
+
 
 create table if not exists agent_analyses_feedback (
   id uuid primary key default gen_random_uuid(),
@@ -336,12 +363,15 @@ create table if not exists agent_analyses_feedback (
 );
 alter table agent_analyses_feedback enable row level security;
 
+
 create policy "authenticated read feedback"
   on agent_analyses_feedback for select to authenticated using (true);
+
 
 create policy "authenticated write own feedback"
   on agent_analyses_feedback for insert to authenticated
   with check (user_id = auth.uid());
+
 
 create table if not exists sku_actions (
   id uuid primary key default gen_random_uuid(),
@@ -357,12 +387,15 @@ create table if not exists sku_actions (
 );
 alter table sku_actions enable row level security;
 
+
 create policy "authenticated read actions"
   on sku_actions for select to authenticated using (true);
+
 
 create policy "authenticated write own actions"
   on sku_actions for insert to authenticated
   with check (created_by = auth.uid());
+
 
 create policy "authenticated update own actions"
   on sku_actions for update to authenticated

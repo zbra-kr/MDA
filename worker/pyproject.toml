@@ -3,7 +3,6 @@ name = "bcave-competitor-radar-worker"
 version = "0.1.0"
 description = "Worker for B.CAVE Competitor Radar — scraping, detection, LLM analysis, publishing"
 requires-python = ">=3.12"
-readme = "../README.md"
 authors = [
   { name = "B.CAVE IT Team", email = "it@bcave.co.kr" },
 ]

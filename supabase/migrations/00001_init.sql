@@ -142,7 +142,7 @@ create table promotions (
   discovered_at timestamptz default now()
 );
 create index promotions_pid_idx on promotions(product_id);
-create index promotions_active_idx on promotions(ends_at) where ends_at > now();
+create index promotions_active_idx on promotions(ends_at);
 
 -- ====================================
 -- Analysis tables
