@@ -66,15 +66,30 @@
 - [ ] HTML 리포트 템플릿 (`publishers/html_report.py`, Jinja2)
 - [ ] Slack 발송 모듈 (Block Kit)
 - [ ] Notion 발송 모듈
-- [ ] Next.js 프로젝트 init (`viewer/`)
-- [ ] Supabase 연결 + 인증 (`viewer/lib/supabase.ts`)
-- [ ] 오늘의 리포트 페이지
-- [ ] 과거 이력 페이지 + 트렌드 차트
-- [ ] 상품 드릴다운 페이지
-- [ ] Vercel 배포 + 도메인 연결 (radar.bcave.internal 등)
+- [x] Next.js 프로젝트 init (`viewer/`) — Claude Design 핸드오프 통합 완료
+- [x] Supabase 연결 레이어 (`viewer/lib/supabase/*`, `viewer/lib/queries.ts`)
+- [x] 오늘의 리포트 페이지 (`/reports/[date]`)
+- [x] 상품/이상징후 드릴다운 페이지 (`/anomalies/[id]`)
+- [x] 도메인 컴포넌트 13종 + 디자인 토큰(radar.tokens v0.3) 적용
+- [x] viewer 마이그레이션 SQL (`00003_viewer_views.sql`, `00004_viewer_schema_patch.sql`)
+- [ ] mock → Supabase 실연결 전환 (`NEXT_PUBLIC_USE_MOCK=false`, `npm run types`)
+- [ ] 과거 이력 페이지 + 멀티브랜드 트렌드 차트 (`/trends` — 현재 플레이스홀더)
+- [ ] 매칭 큐레이션 페이지 (`/matches` — 현재 플레이스홀더)
+- [ ] 분석 채택/기각 Server Action (`agent_analyses_feedback` 쓰기 경로)
+- [ ] Vercel 배포 + 도메인 연결 (radar.bcave.co.kr)
 - [ ] n8n 풀 파이프라인 (스크래핑 → 탐지 → 매칭 → LLM → 발송)
 - [ ] 운영 매뉴얼 작성 (`docs/RUNBOOK.md` 완성)
 - [ ] 사용 부서 온보딩 (상품기획·MD)
+
+> **Claude Design 핸드오프 통합 노트** (2026-05-14)
+> Claude Design이 생성한 viewer-handoff 번들을 `viewer/`에 통합 완료.
+> - 디자인 토큰 `tokens.css`(radar.tokens v0.3)를 `app/globals.css`에 병합
+> - `next build` 9개 라우트 전부 컴파일 검증 완료
+> - 환경 특이사항 2건: ① `next/font/google` 대신 CDN @import 사용
+>   (사내망 빌드 안정성) ② `lib/supabase/server.ts`는 @supabase/ssr 0.5+
+>   getAll/setAll 패턴으로 갱신
+> - `components/ui/`는 비어 있음 — shadcn primitive는 셋업 시
+>   `npx shadcn add`로 추가 (README 참조)
 
 ### 검증 게이트 3
 - [ ] 2주 연속 매일 아침 8시 발송 성공

@@ -1,0 +1,575 @@
+/* viewer/app/globals.css
+ *
+ * 1) Tailwind directives
+ * 2) Pretendard + JetBrains Mono font imports
+ * 3) Paste the entire contents of design-reference/tokens.css below
+ *    the marker — it is the source of truth.
+ *
+ * Do NOT translate the OKLCH values into Tailwind config. They live as
+ * CSS variables; Tailwind classes resolve to them via tailwind.config.ts.
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Pretendard via CDN — for production, self-host the woff2 instead. */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css");
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap");
+
+/* ============================================================
+   PASTE design-reference/tokens.css FROM HERE DOWN
+   ============================================================ */
+
+/* ============================================================
+   radar.tokens v0.3 — shared tokens + base chrome
+   Used by: design-system v3.html, components.html, tables.html, charts.html
+   ============================================================ */
+
+:root {
+  /* -- Type families ------------------------------------------ */
+  --font-sans:  "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --font-mono:  "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* -- Type scale (baseline 13/19) ---------------------------- */
+  --fs-2xs:  10px;  --lh-2xs: 14px;
+  --fs-xs:   11px;  --lh-xs:  16px;
+  --fs-sm:   12px;  --lh-sm:  16px;
+  --fs-base: 13px;  --lh-base:19px;
+  --fs-md:   14px;  --lh-md:  20px;
+  --fs-lg:   16px;  --lh-lg:  22px;
+  --fs-xl:   18px;  --lh-xl:  26px;
+  --fs-2xl:  20px;  --lh-2xl: 26px;
+  --fs-3xl:  24px;  --lh-3xl: 30px;
+  --fs-4xl:  32px;  --lh-4xl: 38px;
+
+  --fw-regular: 400;
+  --fw-medium:  500;
+  --fw-semibold:600;
+  --fw-bold:    700;
+
+  --ls-tight: -0.012em;
+  --ls-display: -0.025em;
+  --ls-normal: 0;
+  --ls-wide: 0.06em;
+  --ls-num: -0.005em;
+
+  /* -- Spacing ------------------------------------------------ */
+  --sp-1:  2px;  --sp-2:  4px;  --sp-3:  6px;  --sp-4:  8px;
+  --sp-5:  12px; --sp-6:  16px; --sp-7:  20px; --sp-8:  24px;
+  --sp-9:  32px; --sp-10: 40px; --sp-11: 56px; --sp-12: 72px; --sp-13: 104px;
+
+  /* -- Radius ------------------------------------------------- */
+  --r-xs: 1px; --r-sm: 3px; --r-md: 5px; --r-lg: 7px; --r-xl: 12px;
+  --r-full: 9999px;
+
+  /* -- Density ------------------------------------------------ */
+  --row-compact: 30px;
+  --row-default: 36px;
+  --row-cozy:    44px;
+
+  /* ============================================================
+     COLOR — DARK (default).  Warm graphite, hue 70°.
+     ============================================================ */
+  --bg-canvas:    oklch(14%  0.006 70);
+  --bg-surface:   oklch(17.5% 0.007 70);
+  --bg-raised:    oklch(21%  0.008 70);
+  --bg-sunken:    oklch(11%  0.005 70);
+  --bg-hover:     oklch(23%  0.009 70);
+  --bg-active:    oklch(26%  0.010 70);
+  --bg-selected:  oklch(28%  0.012 70);
+
+  --border-hair:    oklch(22% 0.008 70);
+  --border-subtle:  oklch(25% 0.009 70);
+  --border-default: oklch(32% 0.011 70);
+  --border-strong:  oklch(48% 0.012 70);
+  --border-focus:   oklch(70% 0.06  70);
+
+  --fg-primary:   oklch(95% 0.008 75);
+  --fg-secondary: oklch(76% 0.008 75);
+  --fg-tertiary:  oklch(58% 0.009 75);
+  --fg-quaternary:oklch(45% 0.008 75);
+  --fg-disabled:  oklch(38% 0.007 75);
+  --fg-inverse:   oklch(14% 0.006 70);
+
+  --sev-high-bg:     oklch(24% 0.06 35);
+  --sev-high-border: oklch(42% 0.10 35);
+  --sev-high-fg:     oklch(78% 0.11 38);
+  --sev-high-solid:  oklch(58% 0.14 35);
+
+  --sev-med-bg:      oklch(24% 0.05 80);
+  --sev-med-border:  oklch(42% 0.08 80);
+  --sev-med-fg:      oklch(82% 0.10 82);
+  --sev-med-solid:   oklch(70% 0.11 80);
+
+  --sev-low-bg:      oklch(22% 0.03 145);
+  --sev-low-border:  oklch(38% 0.05 145);
+  --sev-low-fg:      oklch(76% 0.07 148);
+  --sev-low-solid:   oklch(60% 0.08 145);
+
+  --trend-up:    oklch(72% 0.08 148);
+  --trend-down:  oklch(70% 0.13 32);
+  --trend-flat:  oklch(55% 0.009 75);
+
+  --house:       oklch(48% 0.13 25);
+  --house-soft:  oklch(60% 0.11 25);
+
+  /* ============================================================
+     Chart palette — restrained.  For categorical lines we lean
+     on bone-white as primary + 5 muted tones from the severity
+     hues.  Chroma stays low so 4-line charts read like a single
+     family, not a rainbow.
+     ============================================================ */
+  --chart-1: oklch(92% 0.010 75);    /* primary — bone */
+  --chart-2: oklch(72% 0.09  35);    /* clay */
+  --chart-3: oklch(78% 0.08  80);    /* honey */
+  --chart-4: oklch(72% 0.07  148);   /* moss */
+  --chart-5: oklch(70% 0.06  245);   /* slate blue */
+  --chart-6: oklch(68% 0.07  295);   /* dusty violet */
+
+  --chart-grid:    oklch(22% 0.008 70);
+  --chart-axis:    oklch(40% 0.008 75);
+  --chart-tick:    oklch(58% 0.009 75);
+  --chart-area-op: 0.10;             /* area fill opacity */
+
+  /* Sequential — heatmap from sunken → high severity solid */
+  --heat-0: oklch(15%  0.006 70);
+  --heat-1: oklch(22%  0.04  40);
+  --heat-2: oklch(30%  0.07  38);
+  --heat-3: oklch(40%  0.10  35);
+  --heat-4: oklch(52%  0.13  33);
+  --heat-5: oklch(64%  0.16  32);
+
+  /* Shadows --------------------------------------------------- */
+  --shadow-xs: 0 1px 0 0 rgba(0,0,0,0.35);
+  --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.40);
+  --shadow-md: 0 6px 16px -6px rgba(0,0,0,0.55), 0 2px 4px -2px rgba(0,0,0,0.35);
+  --shadow-lg: 0 16px 32px -10px rgba(0,0,0,0.65), 0 6px 12px -6px rgba(0,0,0,0.45);
+  --shadow-xl: 0 32px 64px -16px rgba(0,0,0,0.70);
+  --shadow-focus: 0 0 0 2px var(--bg-canvas), 0 0 0 4px var(--border-focus);
+}
+
+[data-theme="light"] {
+  --bg-canvas:    oklch(97.5% 0.010 80);
+  --bg-surface:   oklch(99%   0.005 80);
+  --bg-raised:    oklch(100%  0     0);
+  --bg-sunken:    oklch(95%   0.012 80);
+  --bg-hover:     oklch(94%   0.012 80);
+  --bg-active:    oklch(91%   0.014 80);
+  --bg-selected:  oklch(93%   0.018 80);
+
+  --border-hair:    oklch(92% 0.008 80);
+  --border-subtle:  oklch(88% 0.010 80);
+  --border-default: oklch(82% 0.012 80);
+  --border-strong:  oklch(60% 0.012 80);
+  --border-focus:   oklch(45% 0.08  35);
+
+  --fg-primary:   oklch(20% 0.010 60);
+  --fg-secondary: oklch(38% 0.010 60);
+  --fg-tertiary:  oklch(52% 0.011 60);
+  --fg-quaternary:oklch(62% 0.010 60);
+  --fg-disabled:  oklch(72% 0.008 60);
+  --fg-inverse:   oklch(98% 0.005 80);
+
+  --sev-high-bg:     oklch(95% 0.04 35);
+  --sev-high-border: oklch(80% 0.10 35);
+  --sev-high-fg:     oklch(42% 0.16 32);
+  --sev-high-solid:  oklch(52% 0.16 32);
+
+  --sev-med-bg:      oklch(95% 0.04 80);
+  --sev-med-border:  oklch(80% 0.08 80);
+  --sev-med-fg:      oklch(42% 0.10 75);
+  --sev-med-solid:   oklch(62% 0.13 78);
+
+  --sev-low-bg:      oklch(94% 0.025 145);
+  --sev-low-border:  oklch(80% 0.05  145);
+  --sev-low-fg:      oklch(38% 0.08  148);
+  --sev-low-solid:   oklch(52% 0.09  148);
+
+  --trend-up:    oklch(46% 0.10 148);
+  --trend-down:  oklch(50% 0.16 32);
+  --trend-flat:  oklch(55% 0.010 60);
+
+  --house:       oklch(38% 0.14 25);
+  --house-soft:  oklch(55% 0.12 25);
+
+  --chart-1: oklch(28% 0.010 75);
+  --chart-2: oklch(52% 0.14  35);
+  --chart-3: oklch(58% 0.12  78);
+  --chart-4: oklch(50% 0.10  148);
+  --chart-5: oklch(48% 0.09  245);
+  --chart-6: oklch(46% 0.10  295);
+
+  --chart-grid:    oklch(92% 0.008 80);
+  --chart-axis:    oklch(70% 0.008 80);
+  --chart-tick:    oklch(50% 0.010 60);
+  --chart-area-op: 0.08;
+
+  --heat-0: oklch(96%  0.010 80);
+  --heat-1: oklch(92%  0.04  40);
+  --heat-2: oklch(82%  0.08  38);
+  --heat-3: oklch(72%  0.11  35);
+  --heat-4: oklch(60%  0.14  33);
+  --heat-5: oklch(48%  0.17  32);
+
+  --shadow-xs: 0 1px 0 0 rgba(50,40,30,0.04);
+  --shadow-sm: 0 1px 2px 0 rgba(50,40,30,0.06), 0 1px 1px 0 rgba(50,40,30,0.03);
+  --shadow-md: 0 6px 16px -6px rgba(50,40,30,0.10), 0 2px 4px -2px rgba(50,40,30,0.05);
+  --shadow-lg: 0 16px 32px -10px rgba(50,40,30,0.12), 0 6px 12px -6px rgba(50,40,30,0.06);
+  --shadow-xl: 0 32px 64px -16px rgba(50,40,30,0.15);
+  --shadow-focus: 0 0 0 2px var(--bg-canvas), 0 0 0 4px var(--border-focus);
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  line-height: var(--lh-base);
+  letter-spacing: var(--ls-tight);
+  color: var(--fg-secondary);
+  background: var(--bg-canvas);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01","tnum";
+}
+.mono { font-family: var(--font-mono); letter-spacing: var(--ls-num); font-feature-settings: "tnum","zero"; }
+.num  { font-family: var(--font-mono); font-feature-settings: "tnum","lnum"; letter-spacing: var(--ls-num); }
+.up   { color: var(--trend-up); }
+.dn   { color: var(--trend-down); }
+.flat { color: var(--trend-flat); }
+
+/* ============================================================
+   App chrome — top bar, brand mark, nav, page hero
+   ============================================================ */
+.app { max-width: 1280px; margin: 0 auto; padding: var(--sp-12) var(--sp-10) var(--sp-13); }
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-bottom: var(--sp-7);
+  margin-bottom: var(--sp-12);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.brand { display:flex; align-items:center; gap: var(--sp-5); }
+.brand .logo {
+  width: 18px; height: 18px;
+  border-radius: var(--r-xs);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-strong);
+  position: relative;
+  flex-shrink: 0;
+}
+.brand .logo::after {
+  /* small bone-white bar inside — reads as a data tile glyph */
+  content: "";
+  position: absolute;
+  left: 3px; top: 7px;
+  width: 6px; height: 2px;
+  background: var(--fg-primary);
+  border-radius: 1px;
+}
+.brand .logo .pulse {
+  /* live status blip sitting on the corner — breaks the flag read */
+  position: absolute;
+  right: -2px; top: -2px;
+  width: 6px; height: 6px;
+  background: var(--house-soft);
+  border-radius: var(--r-full);
+  box-shadow: 0 0 0 0 var(--house-soft);
+  animation: pulse 2.4s ease-out infinite;
+}
+@keyframes pulse {
+  0%   { box-shadow: 0 0 0 0   color-mix(in oklch, var(--house-soft) 50%, transparent); }
+  70%  { box-shadow: 0 0 0 6px transparent; }
+  100% { box-shadow: 0 0 0 0   transparent; }
+}
+.brand .mark {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-md);
+  color: var(--fg-primary);
+  letter-spacing: -0.018em;
+}
+.brand .div { color: var(--fg-quaternary); padding: 0 var(--sp-1); }
+.brand h1 {
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  color: var(--fg-tertiary);
+  margin: 0;
+}
+
+/* B.CAVE product brand — used in the dashboard / anomaly pages.
+   Real PNG icon, inverted on dark for legibility on graphite. */
+.brand-bcave {
+  display: flex; align-items: center; gap: var(--sp-5);
+}
+.brand-bcave .icon {
+  width: 22px; height: 22px;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.brand-bcave .icon img { width: 100%; height: 100%; display: block; object-fit: contain; }
+[data-theme="dark"] .brand-bcave .icon img { filter: invert(1); }
+
+.brand-bcave .product {
+  display: flex; align-items: baseline; gap: var(--sp-3);
+}
+.brand-bcave .product .name {
+  font-family: var(--font-sans);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  color: var(--fg-primary);
+  letter-spacing: -0.018em;
+}
+.brand-bcave .product .sub {
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  color: var(--fg-tertiary);
+}
+
+/* Wordmark used as a footer-style mark or hero mark */
+.wordmark {
+  display: inline-block;
+  height: 14px;
+}
+.wordmark img { height: 100%; display: block; }
+.wordmark.dark img { display: none; }
+[data-theme="dark"] .wordmark.light img { display: none; }
+[data-theme="dark"] .wordmark.dark  img { display: block; }
+.wordmark.light img { display: block; }
+
+.topbar nav.pages {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-left: var(--sp-9);
+  border-left: 1px solid var(--border-subtle);
+  padding-left: var(--sp-7);
+}
+.topbar nav.pages a {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--fg-tertiary);
+  text-decoration: none;
+  padding: 4px 10px;
+  border-radius: var(--r-sm);
+  letter-spacing: -0.005em;
+}
+.topbar nav.pages a:hover { color: var(--fg-primary); background: var(--bg-hover); }
+.topbar nav.pages a.active {
+  color: var(--fg-primary);
+  background: var(--bg-selected);
+}
+
+.actions { display:flex; align-items:center; gap: var(--sp-3); }
+
+/* Standard "btn" used as topbar action — repeated in components.html
+   with full spec.  Keep this minimal so it just works in chrome. */
+.btn {
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--fg-secondary);
+  background: transparent;
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-md);
+  padding: 6px 10px;
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: var(--sp-3);
+  transition: background 80ms ease, border-color 80ms ease, color 80ms ease;
+  letter-spacing: var(--ls-tight);
+}
+.btn:hover { background: var(--bg-hover); border-color: var(--border-strong); color: var(--fg-primary); }
+.btn:active { background: var(--bg-active); }
+.btn[aria-pressed="true"] { background: var(--bg-selected); color: var(--fg-primary); border-color: var(--border-default); }
+.btn .dot { width: 5px; height: 5px; border-radius: var(--r-full); background: var(--fg-tertiary); }
+.btn[aria-pressed="true"] .dot { background: var(--house-soft); }
+
+/* Hero --------------------------------------------------------- */
+.hero {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: var(--sp-11);
+  align-items: start;
+  margin-bottom: var(--sp-12);
+  padding-bottom: var(--sp-10);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.hero .eyebrow {
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  color: var(--fg-tertiary);
+  margin: 0 0 var(--sp-6);
+  display: flex; align-items: center; gap: var(--sp-4);
+}
+.hero .eyebrow .dot { width: 5px; height: 5px; border-radius: var(--r-full); background: var(--trend-up); }
+.hero .title {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-4xl);
+  line-height: var(--lh-4xl);
+  letter-spacing: -0.022em;
+  color: var(--fg-primary);
+  margin: 0 0 var(--sp-6);
+  max-width: 22ch;
+}
+.hero .lede {
+  font-size: var(--fs-md);
+  line-height: 22px;
+  color: var(--fg-secondary);
+  max-width: 56ch;
+  margin: 0;
+}
+.hero dl { margin: 0; display: grid; grid-template-columns: auto 1fr; column-gap: var(--sp-7); row-gap: var(--sp-3); font-size: var(--fs-sm); align-self: end; }
+.hero dt { color: var(--fg-tertiary); }
+.hero dd { color: var(--fg-primary); margin: 0; }
+.hero dd.mono { color: var(--fg-primary); font-size: var(--fs-xs); }
+
+/* Section head ------------------------------------------------- */
+section.tokens { margin-top: var(--sp-12); }
+.s-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: var(--sp-10);
+  margin-bottom: var(--sp-8);
+  padding-bottom: var(--sp-5);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.s-head h2 {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-xl);
+  line-height: var(--lh-xl);
+  letter-spacing: -0.015em;
+  color: var(--fg-primary);
+  margin: 0;
+  display: flex; align-items: baseline; gap: var(--sp-5);
+}
+.s-head h2 .num {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-regular);
+  color: var(--fg-quaternary);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.s-head .note {
+  font-size: var(--fs-sm);
+  line-height: 18px;
+  color: var(--fg-tertiary);
+  max-width: 56ch;
+  margin: 0;
+  text-align: right;
+}
+
+.sub {
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+  color: var(--fg-quaternary);
+  margin: 0 0 var(--sp-6);
+  display: flex; align-items: center; gap: var(--sp-4);
+}
+.sub::after { content: ""; flex: 1; height: 1px; background: var(--border-hair); }
+
+/* Generic card chrome (used widely on sub-pages) ---------------- */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-md);
+}
+.card-pad { padding: var(--sp-8); }
+.card-head {
+  padding: var(--sp-6) var(--sp-7);
+  border-bottom: 1px solid var(--border-hair);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--sp-5);
+}
+.card-head .ttl {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+  color: var(--fg-primary);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.card-head .meta {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--fg-tertiary);
+}
+
+.footer {
+  margin-top: var(--sp-13);
+  padding-top: var(--sp-7);
+  border-top: 1px solid var(--border-subtle);
+  display: flex; justify-content: space-between;
+  font-size: var(--fs-2xs); color: var(--fg-quaternary);
+  font-family: var(--font-mono);
+  text-transform: uppercase; letter-spacing: var(--ls-wide);
+}
+
+/* ============================================================
+   Universal severity tag — used across pages
+   ============================================================ */
+.sev-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 2px 8px 2px 7px;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-2xs); font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-wide); text-transform: uppercase;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.sev-tag .pip { width: 4px; height: 4px; border-radius: var(--r-full); }
+.sev-tag.high { background: var(--sev-high-bg); color: var(--sev-high-fg); border-color: var(--sev-high-border); }
+.sev-tag.high .pip { background: var(--sev-high-solid); }
+.sev-tag.med  { background: var(--sev-med-bg);  color: var(--sev-med-fg);  border-color: var(--sev-med-border); }
+.sev-tag.med  .pip { background: var(--sev-med-solid); }
+.sev-tag.low  { background: var(--sev-low-bg);  color: var(--sev-low-fg);  border-color: var(--sev-low-border); }
+.sev-tag.low  .pip { background: var(--sev-low-solid); }
+
+
+/* ============================================================
+   App-level adjustments (overrides only — keep this section tiny)
+   ============================================================ */
+
+html { scroll-behavior: smooth; }
+body { min-height: 100vh; }
+
+/* Recharts integrates with our chart-* tokens via inline props. The
+   tooltip surface, however, ships its own styles; override here. */
+.recharts-tooltip-wrapper {
+  outline: none;
+}
+.recharts-default-tooltip {
+  background: var(--bg-raised) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--r-md) !important;
+  box-shadow: var(--shadow-md) !important;
+  padding: var(--sp-5) !important;
+}
+.recharts-tooltip-label,
+.recharts-tooltip-item {
+  font-family: var(--font-sans) !important;
+}
+.recharts-cartesian-axis-tick text,
+.recharts-cartesian-axis text {
+  fill: var(--chart-tick) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 10px !important;
+}
