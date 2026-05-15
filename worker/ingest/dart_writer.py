@@ -33,15 +33,22 @@ class IngestResult:
 def upsert_financials(
     client,
     financials: list[CompanyFinancials],
+    *,
+    data_source: str = 'finstate_api',
+    audit_metadata_list: list[dict | None] | None = None,
 ) -> IngestResult:
     """company_financials_history upsert.
 
     UNIQUE 키: (company_id, fiscal_year, fiscal_quarter, is_consolidated).
-    기존 행이 있으면 금액 컬럼만 덮어씀.
+
+    data_source='finstate_api'  → 기존 행 덮어씀 (더 정확한 데이터 우선).
+    data_source='audit_report_xml' → ON CONFLICT 시 기존 행 보존 (finstate_api 우선).
 
     Args:
-        client:     Supabase service_role 클라이언트
-        financials: CompanyFinancials 목록
+        client:             Supabase service_role 클라이언트
+        financials:         CompanyFinancials 목록
+        data_source:        'finstate_api' | 'audit_report_xml'
+        audit_metadata_list: 각 항목의 audit_extraction_metadata dict (audit_report_xml 시)
 
     Returns:
         IngestResult
@@ -51,22 +58,28 @@ def upsert_financials(
         return result
 
     rows = []
-    for f in financials:
-        # fiscal_quarter: None → DB NULL (JSON null)
+    for i, f in enumerate(financials):
+        meta = (audit_metadata_list[i] if audit_metadata_list and i < len(audit_metadata_list)
+                else None)
         rows.append({
-            'company_id':             f.company_id,
-            'fiscal_year':            f.fiscal_year,
-            'fiscal_quarter':         f.fiscal_quarter,
-            'report_type':            f.report_type,
-            'revenue_mkrw':           f.revenue_mkrw,
-            'operating_income_mkrw':  f.operating_income_mkrw,
-            'net_income_mkrw':        f.net_income_mkrw,
-            'total_assets_mkrw':      f.total_assets_mkrw,
-            'total_liabilities_mkrw': f.total_liabilities_mkrw,
-            'total_equity_mkrw':      f.total_equity_mkrw,
-            'is_consolidated':        f.is_consolidated,
-            'reporting_currency':     f.reporting_currency,
+            'company_id':                  f.company_id,
+            'fiscal_year':                 f.fiscal_year,
+            'fiscal_quarter':              f.fiscal_quarter,
+            'report_type':                 f.report_type,
+            'revenue_mkrw':                f.revenue_mkrw,
+            'operating_income_mkrw':       f.operating_income_mkrw,
+            'net_income_mkrw':             f.net_income_mkrw,
+            'total_assets_mkrw':           f.total_assets_mkrw,
+            'total_liabilities_mkrw':      f.total_liabilities_mkrw,
+            'total_equity_mkrw':           f.total_equity_mkrw,
+            'is_consolidated':             f.is_consolidated,
+            'reporting_currency':          f.reporting_currency,
+            'data_source':                 data_source,
+            'audit_extraction_metadata':   meta,
         })
+
+    # finstate_api: 덮어쓰기 / audit_report_xml: 기존 행 보존
+    ignore_dup = data_source != 'finstate_api'
 
     try:
         resp = (
@@ -74,12 +87,13 @@ def upsert_financials(
             .upsert(
                 rows,
                 on_conflict='company_id,fiscal_year,fiscal_quarter,is_consolidated',
+                ignore_duplicates=ignore_dup,
             )
             .execute()
         )
         upserted = len(resp.data) if resp.data else 0
         result.upserted = upserted
-        logger.bind(upserted=upserted).info('dart_financials_upserted')
+        logger.bind(upserted=upserted, data_source=data_source).info('dart_financials_upserted')
     except Exception as exc:
         msg = str(exc)
         result.errors.append(msg)
