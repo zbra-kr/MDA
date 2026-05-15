@@ -96,6 +96,39 @@
 - [ ] 부트스트랩 1회성 완료 (재무 약 33분 + 공시 약 30분)
 - [ ] 분기 cron 1회 정상 동작 (예: 2026-07-01 07시)
 
+## Phase 1.7 — 감사보고서 PDF 파싱 (DART API 한계 보완)
+
+**목표**: Phase 1.6 finstate API 응답 없는 회사 약 46사의 재무를 감사보고서 PDF 에서 추출. 자사(비케이브) 포함.
+
+**선행 조건**: Phase 1.6 완료. 부트스트랩 결과로 대상 회사 확정.
+
+### 배경
+
+Phase 1.6 부트스트랩 후 발견 — DART `finstate` API 는 사업보고서 제출 의무 회사만 응답. 외감 대상이지만 감사보고서만 제출하는 약 46사 (자사 비케이브 포함) 는 재무 데이터 누락. 자사 재무 없이는 viewer 의미 반감.
+
+### 작업
+- [ ] Anthropic API 키 발급 (정호철 개인 명의) + Vision smoke test
+- [ ] 대상 회사 선정 (단계 B — Phase 1.6 부트스트랩 결과 기반, 약 46사)
+- [ ] 마이그레이션 00011 (`company_financials_history` 에 `data_source`, `pdf_extraction_metadata` 컬럼 추가)
+- [ ] DART `document` API 로 감사보고서 PDF 다운로드 모듈
+- [ ] Claude Vision API 로 재무 추출 모듈 + 프롬프트 v1
+- [ ] 자사 1개사 부트스트랩 + 사람 검증 (검증 게이트)
+- [ ] 전체 부트스트랩 (약 46사 × 10년 = 약 460회 LLM 호출) + 사람 검토 큐
+- [ ] 분기 자동 갱신 cron 추가 (Phase 1.6 cron 과 같이)
+
+### 결정사항 (확정 2026-05-16)
+- 대상 범위: 공시 있는 비상장 전체 (약 46사 — 단계 B 에서 확정)
+- 파싱 방식: Claude Vision API (정확도 우선, 부트스트랩 비용 $20~$100)
+- 임시 자사 처리: 없음 (본 Phase 완료 시까지 자사 데이터 없는 상태)
+- 로드맵 위치: Phase 1.6 바로 다음, Phase 2 진입 전 필수
+
+자세한 내용은 `worker/dart/pdf_parsing/README.md`, `docs/skills/10-pdf-parsing.md` 참조.
+
+### 검증 게이트 1.7
+- [ ] 자사 (비케이브) 1개사 × 10년 추출 정확도 100% (사람 검증)
+- [ ] 전체 대상 회사 추출 confidence='high' 비율 ≥ 80%
+- [ ] LLM 비용 부트스트랩 $100 이하
+
 ## Phase 2 — 탐지·매칭·LLM 분석 (Week 3~4)
 
 **목표**: 이상상품을 사람이 보고 "쓸만한가" 판단 가능한 수준의 LLM 분석.
@@ -197,7 +230,8 @@
 - 2026-05-16 — **대규모 갱신**:
   - Phase 1 본채 완료 (스크래퍼 2종 + 적재 2종 + cron 3개)
   - Phase 1.5 신설 (회사 마스터, 자사 brand 11개 정정)
-  - Phase 1.6 신설 (DART 통합 — 설계 완료, 작업 대기)
+  - Phase 1.6 신설·진행 (DART 통합 — 단계 A~E + 부트스트랩 완료, 단계 F 대기)
+  - Phase 1.7 신설 (감사보고서 PDF 파싱 — 설계 완료, 1.6 후 진입)
   - Phase 3.2 일부 ✅ (viewer 4개 화면 실연결)
   - 잔여 부채 청소 (musinsa_brand_id 백필, 썸네일, hydration)
   - Phase 4 Backlog 에 wackywilly slug + DART Phase 2 통합 추가
