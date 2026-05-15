@@ -1,0 +1,182 @@
+company_name,brand_name,brand_slug_guess,confidence,musinsa_likely,note
+영원무역홀딩스,노스페이스,the-north-face,medium,maybe,영원아웃도어가 라이선스. 무신사 입점은 시즌별
+영원무역홀딩스,골드윈,goldwin,low,unknown,영원아웃도어 산하 라이선스 의류
+미스토홀딩스,휠라,fila,high,yes,휠라코리아·미스토홀딩스 모브랜드
+미스토홀딩스,휠라키즈,fila-kids,medium,maybe,
+삼성물산(패션부문),빈폴,beanpole,high,yes,
+삼성물산(패션부문),빈폴아웃도어,beanpole-outdoor,medium,maybe,
+삼성물산(패션부문),빈폴키즈,beanpole-kids,low,maybe,
+삼성물산(패션부문),갤럭시,galaxy-lifestyle,low,no,남성 정장 — 무신사 입점 가능성 낮음
+삼성물산(패션부문),구호,kuho,medium,maybe,여성복
+삼성물산(패션부문),에잇세컨즈,8seconds,high,yes,
+한세실업,,,low,no,주로 OEM/수출 — 자체 무신사 브랜드 없음
+F&F홀딩스,MLB,mlb,high,yes,F&F 핵심 브랜드
+F&F홀딩스,디스커버리 익스페디션,discovery-expedition,high,yes,F&F 핵심 브랜드
+F&F홀딩스,MLB키즈,mlb-kids,medium,maybe,
+F&F홀딩스,스트레치엔젤스,stretch-angels,medium,maybe,
+LF,헤지스,hazzys,high,yes,LF 시그니처
+LF,닥스,daks,high,yes,
+LF,질스튜어트,jill-stuart,high,yes,
+LF,질바이질스튜어트,jill-by-jill-stuart,medium,maybe,
+LF,TNGT,tngt,medium,maybe,
+LF,라푸마,lafuma,medium,maybe,아웃도어
+LF,헤지스키즈,hazzys-kids,low,maybe,
+에이피알,에이프릴스킨,april-skin,low,no,화장품 위주 — 의류 영역 작음
+에이피알,널디,nerdy,high,yes,에이피알 패션 브랜드
+한섬,시스템,system-homme,medium,maybe,시스템·시스템옴므
+한섬,타임,time,medium,maybe,여성복
+한섬,마인,mine,low,no,
+한섬,더캐시미어,the-cashmere,low,no,
+한섬,SJSJ,sjsj,low,maybe,
+신성통상,지오지아,ziozia,high,yes,신성통상 핵심
+신성통상,탑텐,topten,high,yes,
+신성통상,올젠,olzen,medium,maybe,
+신성통상,앤드지,andz,medium,maybe,남성복
+신성통상,폴햄,polham,high,yes,
+코오롱인더스트리(FnC부문),코오롱스포츠,kolon-sport,high,yes,
+코오롱인더스트리(FnC부문),럭키슈에뜨,lucky-chouette,medium,maybe,
+코오롱인더스트리(FnC부문),쿠론,couronne,low,no,잡화
+코오롱인더스트리(FnC부문),시리즈,series,medium,maybe,
+코오롱인더스트리(FnC부문),왁,wac,medium,maybe,골프웨어
+신세계인터내셔날,보브,vov,medium,maybe,여성복
+신세계인터내셔날,지컷,g-cut,medium,maybe,
+신세계인터내셔날,스튜디오톰보이,studio-tomboy,medium,maybe,
+신세계인터내셔날,일라일,illail,low,no,
+신원,베스띠벨리,bestibelli,low,maybe,
+신원,씨,si,low,no,
+신원,비키,vicki,low,no,
+TP,,,low,no,구 태평양물산 — OEM 비중 큼
+폰드그룹,로엠,roem,medium,maybe,
+폰드그룹,모르간,morgan,low,maybe,여성복
+폰드그룹,르까프,lecaf,medium,maybe,스포츠
+폰드그룹,케이스위스,k-swiss,medium,maybe,
+폰드그룹,프로스펙스,prospecs,high,yes,
+더네이쳐홀딩스,내셔널지오그래픽,national-geographic-apparel,high,yes,더네이쳐홀딩스 핵심
+더네이쳐홀딩스,NFL,nfl,medium,maybe,라이선스
+더네이쳐홀딩스,헌터,hunter,low,maybe,
+크리스에프앤씨,파리게이츠,pearlygates,medium,maybe,골프웨어
+크리스에프앤씨,마스터바니,master-bunny,medium,maybe,
+크리스에프앤씨,핑,ping,low,no,
+젝시믹스,젝시믹스,xexymix,high,yes,자체 브랜드
+웰크론,,,low,no,섬유 제조 위주
+감성코퍼레이션,스노우피크어패럴,snow-peak-apparel,medium,maybe,라이선스
+한세엠케이,NBA,nba-apparel,medium,maybe,라이선스
+한세엠케이,프로스펙스키즈,prospecs-kids,low,maybe,
+한세엠케이,컬리수,curlysue,low,no,
+대현,모조에스핀,mojo-spin,low,no,여성복
+대현,주크,zooc,low,no,
+대현,블루핏,blue-fit,low,maybe,
+비비안,비비안,vivien,low,no,여성 언더웨어
+감성코퍼레이션,제이엠솔루션,jm-solution,low,no,
+젝시믹스,XEXYMIX MEN,xexymix-men,medium,maybe,
+신영와코루,와코루,wacoal,low,no,언더웨어 — 무신사 카테고리와 무관
+그리티,바바리안,bavarian,low,maybe,
+아가방컴퍼니,아가방,agabang,low,no,유아동복 — 무신사 메인 카테고리 아님
+아가방컴퍼니,에뜨와,etoile,low,no,
+티비에이치글로벌,행텐,hang-ten,medium,maybe,
+티비에이치글로벌,센터폴,centerpole,medium,maybe,
+BYC,BYC,byc,medium,maybe,언더웨어
+LS네트웍스(패션부문),스케쳐스,skechers,medium,maybe,라이선스
+LS네트웍스(패션부문),잭울프스킨,jack-wolfskin,low,maybe,
+SG세계물산,바쏘옴므,basso-homme,low,maybe,
+SG세계물산,SG세계물산,sg,low,no,
+형지엘리트,엘리트,elite-school,low,no,교복 — 무신사 무관
+지엔코,써스데이아일랜드,thursday-island,medium,maybe,
+지엔코,쿠아드로,quadro,low,maybe,
+인디에프,트루젠,trugen,medium,maybe,
+인디에프,JoinUs,join-us,low,maybe,
+패션플랫폼,29CM,,low,no,29CM는 무신사 경쟁 플랫폼 — 브랜드 아닌 채널
+쌍방울,쌍방울,trywell,low,no,언더웨어
+좋은사람들,예스,yes,low,no,언더웨어
+좋은사람들,보디가드,bodyguard,low,no,
+제이에스티나,제이에스티나,j-estina,low,maybe,주얼리·핸드백
+에스티오,STCO,stco,low,maybe,남성복
+제로투세븐,알로앤루,allo-and-lugh,low,no,유아동
+에이유브랜즈,(다수 브랜드),,low,unknown,2025년 4월 상장 신생 — 매핑 추가 조사 필요
+배럴,배럴,barrel,medium,maybe,수영복·서핑웨어
+형지I&C,크로커다일,crocodile-ladies,low,maybe,여성복
+메디앙스,(유아용품),,low,no,유아용품 — 무신사 무관
+토박스코리아,토박스,toboxkids,low,no,키즈슈즈
+진도,진도모피,jindo-fur,low,no,모피
+코데즈컴바인,코데즈컴바인,codes-combine,medium,maybe,
+형지글로벌,까스텔바작,castelbajac,low,maybe,
+원풍물산,킹스맨,kingsman,low,no,남성복
+데코앤에프,데코,deco,low,no,여성복
+이랜드월드,스파오,spao,high,yes,이랜드 핵심
+이랜드월드,미쏘,mixxo,high,yes,
+이랜드월드,후아유,whoau,high,yes,
+이랜드월드,뉴발란스,new-balance,high,yes,이랜드월드 라이선스
+이랜드월드,로엠,roem,low,no,로엠은 폰드그룹 — 중복 주의
+이랜드월드,쇼콜라,chocoolate,low,maybe,
+이랜드월드,후아유키즈,whoau-kids,medium,maybe,
+이랜드월드,로엠걸즈,roem-girls,low,no,
+이랜드월드,프롬비기닝,from-beginning,medium,maybe,
+나이키코리아,나이키,nike,high,yes,글로벌 본사 — 무신사 입점 확실
+나이키코리아,조던,jordan,medium,maybe,
+나이키코리아,컨버스,converse,medium,maybe,나이키 산하
+무신사,무신사 스탠다드,musinsa-standard,high,yes,무신사 자체 브랜드
+무신사,무신사 우먼,musinsa-standard-women,medium,maybe,
+파크랜드,파크랜드,parkland,low,maybe,남성 정장 위주
+데상트코리아,데상트,descente,high,yes,
+데상트코리아,르꼬끄,le-coq-sportif,high,yes,
+데상트코리아,엄브로,umbro,medium,maybe,
+데상트코리아,먼싱웨어,munsingwear,medium,maybe,골프
+에이션패션,폴로 랄프로렌,polo-ralph-lauren,high,yes,에이션패션 라이선스
+케이투코리아,케이투,k2,high,yes,
+케이투코리아,아이더,eider,low,maybe,아이더는 별도 — 동명회사 주의
+동일라코스테,라코스테,lacoste,high,yes,
+인동에프엔,쟈딕앤볼테르,zadig-et-voltaire,low,maybe,
+인동에프엔,꾸레쥬,courreges,low,no,
+안다르,안다르,andar,high,yes,운동복·레깅스
+BYN블랙야크,블랙야크,black-yak,high,yes,
+BYN블랙야크,나우,nau,low,maybe,
+BYN블랙야크,마무트,mammut,low,maybe,
+네파,네파,nepa,high,yes,
+하이라이트브랜즈,스탠리,stanley,low,maybe,텀블러 위주 — 무신사 의류 아님
+하이라이트브랜즈,핸드폰케이스 등,,low,unknown,라이선스 IP 다수 — 의류 비중 확인 필요
+비케이브,커버낫,covernat,high,yes,B.CAVE 자사 — seed에 이미 있음
+비케이브,리,lee,high,yes,B.CAVE 자사 — seed에 이미 있음
+비케이브,와키윌리,wakywilly,high,yes,B.CAVE 자사 — seed에 이미 있음
+세정,올리비아로렌,olivia-lauren,low,no,여성복
+세정,웰메이드,wellmade,low,maybe,남성복
+세정,인디안,indian,low,maybe,남성복
+패션그룹형지,(까스텔바작 등),,low,maybe,형지글로벌과 중복 의심
+바바패션,(여성복 다수),,low,maybe,
+아이더,아이더,eider,high,yes,등산·아웃도어
+피브이에이치코리아,캘빈클라인,calvin-klein,high,yes,PVH 그룹 한국법인
+피브이에이치코리아,타미힐피거,tommy-hilfiger,high,yes,PVH 그룹
+서양네트웍스,블랭크,blank,low,maybe,
+서양네트웍스,(주얼리),,low,no,주얼리·패션잡화
+레이어,레이어,layer,medium,maybe,온라인 브랜드
+한성에프아이,(여성복),,low,unknown,
+시선인터내셔널,쥬시꾸뛰르,juicy-couture,low,maybe,라이선스
+시선인터내셔널,데미안,demian,low,maybe,
+골든듀,골든듀,goldendew,low,no,주얼리 — 무신사 무관
+베네통코리아,베네통,benetton,medium,maybe,
+다이나핏코리아,다이나핏,dynafit,low,maybe,등산
+위비스,에고이스트,egoist,low,maybe,여성복
+위비스,크레송,creson,low,no,
+제이씨패밀리,제이씨패밀리,jc-family,low,unknown,
+브이엘엔코,프라다,prada,low,no,럭셔리 — 무신사 무관 가능성
+푸마코리아,푸마,puma,high,yes,
+한국캘러웨이골프,캘러웨이,callaway-apparel,medium,maybe,골프웨어
+케이투세이프티,케이투세이프티,k2-safety,low,no,안전화 — 산업용
+마뗑킴,마뗑킴,matin-kim,high,yes,여성 컨템포러리 인기 브랜드
+더캐리,더캐리,the-carrie,low,maybe,
+지오다노,지오다노,giordano,high,yes,
+독립문,크로커다일,crocodile,low,maybe,형지I&C와 중복 가능성
+아이디룩,아이디룩,idlook,low,unknown,
+알레르망,알레르망,allerement,low,no,침구·홈리빙 — 무신사 무관
+하이드어웨이,하이드어웨이,hideaway,low,maybe,
+피스피스스튜디오,피스피스스튜디오,piecepeace-studio,medium,maybe,
+컬럼비아스포츠웨어코리아,컬럼비아,columbia,high,yes,
+에스제이듀코,(여성복),,low,unknown,
+우림에프엠지,(여성복),,low,unknown,
+메디쿼터스,(라이프스타일),,low,maybe,B.CAVE 메모리에 메디쿼터스 품번체계 언급 있음 — 확인 필요
+탠디,탠디,tandy,low,maybe,슈즈
+제이엔지코리아,(아동복),,low,unknown,
+로저나인,로저나인,rogernine,low,maybe,
+레드페이스,레드페이스,redface,medium,maybe,아웃도어
+원더플레이스,원더플레이스,wonder-place,low,maybe,멀티 셀렉트숍 — 채널 성격
+에스제이그룹,카파,kappa,medium,maybe,라이선스
+에스제이그룹,헬렌카민스키,helen-kaminski,low,maybe,라이선스

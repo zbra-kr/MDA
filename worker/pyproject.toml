@@ -29,6 +29,9 @@ dependencies = [
   "supabase>=2.7",
   "snowflake-connector-python>=3.12",
 
+  # DART OpenAPI
+  "opendartreader>=0.2",
+
   # LLM
   "ollama>=0.3",
   "openai>=1.50",                  # Ollama OpenAI 호환 클라이언트로 사용

@@ -161,6 +161,187 @@
 
 ---
 
+## ADR-010: 자사 brand 11개 확정 (3개 → 11개)
+
+**상태**: Accepted (2026-05-16)
+
+**맥락**: seed.sql 초기에는 자사 brand 3개 (covernat, lee, wakywilly) 로 박았으나, 2026-05-15 새벽 musinsa_brand_id 의미를 정확하게 짚으면서 자사 brand 가 실제로 11개임을 발견.
+
+**발견 과정**:
+- musinsa_brand_id 컬럼이 NULL 인 자사 brand 3개를 보다가 "자사도 무신사에서 팔리는데 왜 NULL?" 의문 → 무신사 URL slug 확인 → 자사 brand 7개 추가 누락 발견
+- 추가로 `wakywilly` slug 가 무신사 공식 표기 `wackywilly` (c 2번) 와 다른 오타임을 발견
+- 자사 4개 (covernatwoman, covernatkids, leekids, 등) 가 이미 cron 자동 등록으로 `is_own=false` 로 들어가 있어 정정 필요
+
+**결정**: 자사 brand 11개로 확정.
+
+| slug | name | musinsa_brand_id |
+| --- | --- | --- |
+| covernat | 커버낫 | covernat |
+| covernatwoman | 커버낫 우먼 | covernatwoman |
+| covernatkids | 커버낫 키즈 | covernatkids |
+| covernatbeauty | 커버낫 뷰티 | covernatbeauty |
+| lee | 리 | lee |
+| leekids | 리 키즈 | leekids |
+| wakywilly | 와키윌리 | **wackywilly** (slug 와 다름) |
+| fallett | 팔렛 | fallett |
+| wrangler | 랭글러 | wrangler |
+| namerclothing | 네이머클로딩 | namerclothing |
+| thrasher | 트레셔 | thrasher |
+
+**결과**:
+- 비케이브 brand_count 3 → 11 정정
+- 그동안 "타사 미검토"로 잡혀 있던 자사 4개 brand 의 상품 8건도 자동으로 자사 매출에 합산됨
+- wakywilly → wackywilly slug 정정은 FK 영향 점검 후 별도 작업 (Phase 4 백로그)
+- ON CONFLICT DO NOTHING 만으로는 기존 행 정정이 안 되므로, 별도 UPDATE 로 자사 승급 처리
+
+**교훈**:
+- musinsa_brand_id 같은 외부 식별자 의미를 명확히 문서화해야 운영 중 발견되는 누락·오타 가능성
+- seed 데이터의 정확성 검증을 Phase 1.5 검증 게이트에 포함시킬 것
+
+---
+
+## ADR-011: musinsa_brand_id 의미와 백필 정책
+
+**상태**: Accepted (2026-05-16)
+
+**맥락**: brands 테이블에 `musinsa_brand_id` 컬럼이 있는데 의미가 흐릿했음. 무신사 brand 페이지 URL `musinsa.com/brand/{slug}` 의 slug 가 곧 musinsa_brand_id 임을 확인.
+
+**결정**: 
+- `musinsa_brand_id` = 무신사 URL slug (문자열, 숫자 아님)
+- 자사 여부 (is_own) 와 musinsa_brand_id 는 독립적
+- 자사 brand 도 무신사 입점 시 musinsa_brand_id 값 있음
+
+**백필 로직**:
+- 새 brand INSERT 시: musinsa_brand_id 같이 박음
+- 기존 brand 행 (musinsa_brand_id=NULL) 발견 시: 해당 카테고리 수집에 등장한 brand 만 UPDATE 로 백필
+- 이미 채워진 행은 건드리지 않음
+
+**한계**:
+- 무신사 랭킹 TOP 101 안에 안 등장하는 brand 는 영원히 NULL 유지
+- 일부러 채우려면 무신사 brand 검색 API 별도 호출 필요 (Phase 4 백로그)
+
+---
+
+## ADR-012: DART OpenAPI 통합 — 인증키 개인 명의
+
+**상태**: Accepted (2026-05-16) · Phase 1.6 적용 예정
+
+**맥락**: Phase 1.6 DART 통합 시 인증키 발급 주체 결정 필요. 본 프로젝트가 정호철 개인 프로젝트라는 위치 고려.
+
+**결정**: DART OpenAPI 인증키는 정호철 개인 명의로 발급.
+
+**사유**:
+- 본 프로젝트는 정호철 개인 프로젝트 (메모리 명시)
+- 회사 자산으로 분리하지 않음
+- 향후 프로젝트가 사내 정식화될 경우 법인 명의로 재발급 가능 (DART 인증키는 무료, 발급 비용 0)
+
+---
+
+## ADR-013: DART 비상장 매칭 실패 회사 처리
+
+**상태**: Accepted (2026-05-16) · Phase 1.6 적용 예정
+
+**맥락**: 비상장 49개사 중 외감대상 (자산 100억+) 만 DART 공시 대상. 영세 비상장 패션 brand 는 DART 에 정보 없음.
+
+**결정**: 매칭 실패 회사는 `companies` 테이블에 두되 `dart_corp_codes` 행 없음. history·disclosures 자동 갱신 안 됨 (정적 보존).
+
+**대안**:
+- (a) **정적 보존** ← 선택. companies 행 유지, 자동 갱신만 안 됨
+- (b) deactivate. 매칭 안 되면 companies 에서 비활성화
+
+**사유**:
+- 정보 없다고 회사 자체를 빼는 건 정보 손실
+- 회사 마스터의 정적 데이터 (Phase 1.5 시드) 는 보존 가치 있음
+- 향후 외감대상 진입 시 매핑 추가 가능
+
+---
+
+## ADR-014: DART Slack 알림 정책 — 모든 공시 (도배 감수)
+
+**상태**: Accepted (2026-05-16) · Phase 1.6 Phase 2 통합 시 적용
+
+**맥락**: 98개사 × 평균 월 5건 = 월 약 500건. 영업일 평균 일 16건, 분기말 일 50건+ 가능.
+
+**결정**: 모든 공시 (high·medium·low 다) Slack 알림. 단 자사 (비케이브) 공시는 제외.
+
+**대안 검토**:
+- high severity 만 알림 + 모든 공시 DB 저장 (보수적 추천)
+- high + medium
+- **모든 공시 알림 ← 선택**
+
+**사유** (정호철 결정):
+- 도배 감수. 정보가 적게 오는 것보다 많이 오는 게 안전
+- LLM 요약으로 길이 자체는 짧음
+- 며칠 운영 후 견딜 수 없으면 임계값 조정 가능 (`WHERE llm_severity = 'high'` 추가)
+
+**부트스트랩 폭증 방지**:
+- 10년치 부트스트랩으로 INSERT 되는 약 19,600건은 `notified_to_slack=true` 로 시작
+- 정상 cron 부터 알림 활성화
+
+---
+
+## ADR-015: DART 재무 부트스트랩 10년
+
+**상태**: Accepted (2026-05-16) · Phase 1.6 적용 예정
+
+**맥락**: 부트스트랩 시 몇 년치 가져올지 결정 필요. 3년·5년·10년·현재년만 선택지.
+
+**결정**: 10년 (2016~2025).
+
+**대안 검토**:
+- 5년 (균형적, 추천)
+- 3년 (스타트업 신중)
+- **10년 ← 선택**
+
+**사유** (정호철 결정):
+- 최대로 가져오자. 데이터는 한 번 가져오면 다시 안 가져와도 됨
+- API 한도 (10,000/일) 대비 부트스트랩 사용량 (약 3,920건) 여유 큼
+- 1회성 약 33분 소요, 디스크 영향 미미 (약 10MB)
+
+**한계 인지**:
+- 2016년 데이터는 한국 패션 산업이 무신사 등장 격변 전 — 비교 가치 약함
+- viewer 시각화는 보통 최근 5년만 보여줄 듯
+- 비상장 일부는 외감대상 시점 이전 데이터 없음
+
+---
+
+## ADR-016: DART 자사 공시 처리 — viewer 표시 yes / Slack 알림 no
+
+**상태**: Accepted (2026-05-16) · Phase 1.6 Phase 2 통합 시 적용
+
+**맥락**: 자사 (비케이브) 공시도 DART 에 발생. 처리 정책 필요.
+
+**결정**: 
+- viewer `/companies/[id]` 에서 자사 공시 정상 표시
+- Slack 알림에선 자사 제외 (`WHERE c.is_own = false`)
+
+**사유**:
+- 자사 공시는 본인 (정호철, IT팀장) 이 이미 알고 있는 정보 → Slack 알림 불필요
+- viewer 에는 다른 사용자도 들어와 회사 단위로 비교 가능해야 함
+- 자사 회사 ID 하드코딩 안 함 — `companies.is_own` 컬럼 기준
+
+---
+
+## ADR-017: 1주일 무인 가동 검증 게이트 1 시작
+
+**상태**: In Progress (2026-05-15 22:00 ~)
+
+**맥락**: Phase 1 본채 완료 + cron 3개 등록 완료 후 7일 무인 가동 검증 시작.
+
+**결정**: 2026-05-15 22:00 부터 7일 (~2026-05-22 22:00) 무인 가동 후 검증 게이트 1 통과 판정.
+
+**관찰 항목**:
+- 봇 차단 / IP 블록 발생 횟수 (목표: 0)
+- 일평균 신규 product · snapshot · 상세 적재 건수
+- 디스크 사용량 추세 (Supabase 500MB 한도)
+- timeout · 실패 패턴
+
+**다음 결정 시점**:
+- 7일 통과 시 Phase 1.6 (DART 통합) 진입
+- 7일 내 봇 차단 발생 시 cron 정책 보수화 (top 줄이기, 딜레이 늘이기)
+
+---
+
 ## (템플릿) ADR-NNN: 제목
 
 **상태**: Proposed / Accepted / Deprecated / Superseded by ADR-NNN

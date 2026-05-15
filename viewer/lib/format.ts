@@ -21,6 +21,23 @@ export const fmtTime = (d: string | Date) => time.format(new Date(d));
 export type DeltaDirection = "rank" | "value";
 export interface Delta { sign: "+" | "−" | ""; abs: string; trend: "up" | "down" | "flat" }
 
+/**
+ * 백만원 단위 매출액을 조/억 단위로 변환.
+ * 4895010 → "4조 8,950억"  /  274342 → "2,743억"
+ */
+export function fmtRevenueMkrw(mkrw: number | null | undefined): string {
+  if (mkrw == null) return "—";
+  const abs = Math.abs(mkrw);
+  const sign = mkrw < 0 ? "−" : "";
+  const jo = Math.floor(abs / 1_000_000);
+  const eok = Math.floor((abs % 1_000_000) / 100);
+  if (jo > 0 && eok > 0) {
+    return `${sign}${jo.toLocaleString("ko-KR")}조 ${eok.toLocaleString("ko-KR")}억`;
+  }
+  if (jo > 0) return `${sign}${jo.toLocaleString("ko-KR")}조`;
+  return `${sign}${eok.toLocaleString("ko-KR")}억`;
+}
+
 export function fmtDelta(n: number | null | undefined, dir: DeltaDirection = "value", opts?: { unit?: string }): Delta {
   if (n == null || isNaN(n)) return { sign: "", abs: "—", trend: "flat" };
   if (n === 0) return { sign: "", abs: `0${opts?.unit ?? ""}`, trend: "flat" };

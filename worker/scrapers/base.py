@@ -10,7 +10,7 @@ from pathlib import Path
 
 from loguru import logger
 from playwright.async_api import Browser, BrowserContext, Page, async_playwright
-from playwright_stealth import stealth_async
+from playwright_stealth import Stealth as _Stealth
 from tenacity import retry, retry_if_not_exception_type, stop_after_attempt, wait_exponential
 
 # ---------------------------------------------------------------------------
@@ -142,7 +142,7 @@ class BaseScraper(ABC):
         t0 = time.monotonic()
 
         page = await self._ctx.new_page()
-        await stealth_async(page)
+        await _Stealth().apply_stealth_async(page)
 
         try:
             response = await page.goto(url, timeout=self.TIMEOUT_MS, wait_until="networkidle")

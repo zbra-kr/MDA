@@ -1,0 +1,36 @@
+{
+  "target_url": "https://www.musinsa.com/ranking/best?categoryCode=001&period=now",
+  "final_url": "https://www.musinsa.com/ranking/best?categoryCode=001&period=now",
+  "page_title": "무신사",
+  "timing": {
+    "goto_sec": 0.75
+  },
+  "__next_data__": {
+    "found": false,
+    "top_keys": [],
+    "content": {}
+  },
+  "api_calls": [],
+  "api_calls_full": [],
+  "nav_request_count": 5,
+  "nav_requests_json": [],
+  "pagination_info": {
+    "pagination_elements": 0,
+    "load_more_buttons": 0,
+    "scroll_sentinels": 0,
+    "has_next_page_link": false
+  },
+  "product_count_info": {},
+  "dom_items_sample": [],
+  "url_params": {
+    "pathname": "/ranking/best",
+    "params": {
+      "categoryCode": "001",
+      "period": "now"
+    }
+  },
+  "category_links_sample": [],
+  "ranking_tabs": [],
+  "html_snippet": "\n    <div class=\"error-container\">\n      <h1 class=\"appbar\">\n        <img src=\"https://image.msscdn.net/static/assets/bi/error_logo_musinsa.png\" class=\"appbar-image\" alt=\"MUSINSA\">\n      </h1>\n      <div class=\"error-wrap\">\n        <div class=\"message-wrap\">\n          <strong>페이지를 찾을 수 없습니다.</strong>\n          <p>\n            페이지 주소가 잘못되었거나 알 수 없는 오류가 발생했습니다.<br>\n            입력한 주소를 다시 확인해 주세요.\n          </p>\n        </div>\n        <div class=\"button-wrap\">\n          <a class=\"button\" href=\"javascript:void(0)\" onclick=\"AppInterface.historyBack()\">이전 페이지</a>\n          <a class=\"button\" href=\"https://www.musinsa.com\">무신사 홈</a>\n        </div>\n      </div>\n    </div>\n  \n\n",
+  "robots_txt": "##############################\n# MSS robots.txt\n# Last Updated: 2026.05.13\n##############################\n\n##############################\n# Group 1: Fully Granted\n##############################\nUser-agent: Applebot\nUser-agent: facebookexternalhit\nUser-agent: Twitterbot\nUser-agent: OAI-SearchBot\nUser-agent: ChatGPT-User\nUser-agent: Claude-User\nUser-agent: Claude-SearchBot\nUser-agent: Perplexity-User\nAllow: /\n\n##############################\n# Group 2: Partially Granted\n##############################\nUser-agent: Googlebot\nUser-agent: Googlebot-Image\nUser-agent: Storebot-Google\nUser-agent: Yeti\nUser-agent: NaverBot\nUser-agent: Daum\nUser-agent: Daumoa\nUser-agent: Bingbot\nUser-agent: ZumBot\nUser-agent: DuckDuckBot\nUser-agent: Yandexbot\nUser-agent: Slurp\nUser-agent: CCBot\nUser-agent: GPTBot\nUser-agent: Meta-WebIndexer\nUser-agent: Google-Extended\nUser-agent: ClaudeBot\nUser-agent: Meta-ExternalAgent\nUser-agent: PerplexityBot\nUser-agent: Amazonbot\nAllow: /\nDisallow: /auth/\nDisallow: /fashiontalk/\nDisallow: /festival/\nDisallow: /like/\nDisallow: /mypage/\nDisallow: /showcase/\nDisallow: /app/coupon/coupon_result/\n\n##############################\n# Group 3: Blocked - Specific Bots\n# wildcard 규칙을 따르지 않는 봇 명시 차단 (Baidu 등)\n##############################\nUser-agent: Baiduspider\nDisallow: /\n\n##############################\n# Group 4: Blocked - Wildcard Fallback\n##############################\nUser-agent: *\nDisallow: /\n\nSitemap: https://www.musinsa.com/sitemap-musinsa-index.xml\n"
+}

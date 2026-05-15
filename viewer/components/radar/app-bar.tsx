@@ -9,6 +9,9 @@ import { ThemeToggle } from "@/components/theme-toggle";
 const TABS = [
   { href: "/reports/today", label: "대시보드", key: "dashboard" },
   { href: "/anomalies", label: "이상 징후", key: "anomalies" },
+  { href: "/products/today", label: "상품", key: "products" },
+  { href: "/brands", label: "브랜드", key: "brands" },
+  { href: "/companies", label: "회사", key: "companies" },
   { href: "/trends", label: "트렌드", key: "trends" },
   { href: "/matches", label: "매칭", key: "matches" },
   { href: "/settings", label: "설정", key: "settings" },

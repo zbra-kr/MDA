@@ -9,7 +9,8 @@ type CookieToSet = { name: string; value: string; options: CookieOptions };
 
 export async function supabaseServer() {
   const store = await cookies();
-  return createServerClient<Database>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return createServerClient<Database, "public", any>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
