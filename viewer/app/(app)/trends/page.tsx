@@ -29,7 +29,7 @@ export default async function TrendsPage({ searchParams }: PageProps) {
 
   const [anomalies, timeSeries] = await Promise.all([
     getAnomalies({
-      detector_types: selectedTypes.length ? selectedTypes : undefined,
+      anomaly_types: selectedTypes.length ? selectedTypes : undefined,
       date_from:      dateFrom,
       date_to:        dateTo,
       limit:          300,

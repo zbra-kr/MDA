@@ -101,7 +101,7 @@ export interface AnomalyTimeSeriesRow {
 // ─── getAnomalies ────────────────────────────────────────────────────────────
 
 export interface AnomalyFilter {
-  detector_types?: AnomalyType[];
+  anomaly_types?: AnomalyType[];
   date_from?: string; // YYYY-MM-DD
   date_to?: string;
   brand_slugs?: string[];
@@ -136,8 +136,8 @@ export async function getAnomalies(filter: AnomalyFilter = {}): Promise<AnomalyR
       )
       .order("severity", { ascending: false });
 
-    if (filter.detector_types?.length) {
-      q = q.in("anomaly_type", filter.detector_types);
+    if (filter.anomaly_types?.length) {
+      q = q.in("anomaly_type", filter.anomaly_types);
     }
     if (filter.date_from) q = q.gte("detected_on", filter.date_from);
     if (filter.date_to)   q = q.lte("detected_on", filter.date_to);
@@ -361,7 +361,7 @@ export async function getMatchDetail(matchId: string): Promise<MatchDetailRow | 
         "id, competitor_product_id, own_sku_id, similarity_score, match_method, " +
         "diff_summary, detected_at, " +
         "own_skus(sku_code, product_name, price, brand_slug), " +
-        "products:competitor_product_id(name, current_price, brands(name, slug))",
+        "products!competitor_product_id(name, current_price, brands(name, slug))",
       )
       .eq("id", matchId)
       .maybeSingle();
