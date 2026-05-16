@@ -12,6 +12,7 @@ const TABS = [
   { href: "/products/today", label: "상품", key: "products" },
   { href: "/brands", label: "브랜드", key: "brands" },
   { href: "/companies", label: "회사", key: "companies" },
+  { href: "/insights/companies", label: "인사이트", key: "insights" },
   { href: "/trends", label: "트렌드", key: "trends" },
   { href: "/matches", label: "매칭", key: "matches" },
   { href: "/settings", label: "설정", key: "settings" },
