@@ -2,7 +2,7 @@
 
 본 시스템은 3 Phase, 각 2주, 총 6주 일정으로 빌드한다. 각 Phase 끝에 IT팀장 정호철이 검증 게이트를 통과해야 다음 Phase로 진행.
 
-> **최종 갱신**: 2026-05-16 (Phase 1 본채 완료 + Phase 1.5·1.6 추가)
+> **최종 갱신**: 2026-05-16 (Phase 2.0 + 2.1 설계 완료, ADR-023·024·025 확정)
 > **현재 상태**: Phase 1 자동화 가동 중 (cron 3개), 검증 게이트 1 관찰 중
 
 ## Phase 1 — 수집·적재 파이프라인 (Week 1~2)
@@ -129,30 +129,57 @@ Phase 1.6 부트스트랩 후 발견 — DART `finstate` API 는 사업보고서
 - [x] 전체 45개사 부트스트랩 완료, 484행 적재
 - [x] LLM 비용 $0
 
-## Phase 2 — 탐지·매칭·LLM 분석 (Week 3~4)
+## Phase 2.0 — 플랫폼 기본 기능 (인증·권한·설정)
+
+**목표**: 내부 전략 정보 보호 + 감사 가능한 쓰기 경로 구축. Vercel 배포 전 필수.
+
+> 설계: `docs/phase-2.0-design.md` / 작업분할: `docs/phase-2.0-tasks.md` / ADR: ADR-023
+
+### 작업 (단계 A~F)
+
+- [ ] **단계 A** — 마이그레이션 00014 (`profiles` 테이블 + 트리거 + RLS 갱신)
+- [ ] **단계 B** — Supabase Auth 설정 (SMTP·이메일 템플릿·도메인 Hook)
+- [ ] **단계 C** — `/auth/*` 페이지 4개 (로그인·가입·비밀번호 찾기·재설정)
+- [ ] **단계 D** — `middleware.ts` + `lib/auth.ts` (인증 가드 + role 헬퍼)
+- [ ] **단계 E** — `/settings` + `/admin/users` + `/admin/audit` UI
+- [ ] **단계 F** — Server Action 점진 전환 (service_role 우회 → 세션 기반)
+
+### 검증 게이트 2.0
+- [ ] `@bcave.co.kr` 외 도메인 가입 시 에러 반환
+- [ ] 미로그인 시 `/auth/login` 리디렉션
+- [ ] admin 계정으로 `/admin/users` 접근 가능
+- [ ] viewer 계정으로 `/admin/users` 접근 시 차단
+- [ ] 로그인 후 `brand_audit_log.actor`에 `user.email` 기록됨
+
+---
+
+## Phase 2.1 — 탐지·매칭·LLM 분석
 
 **목표**: 이상상품을 사람이 보고 "쓸만한가" 판단 가능한 수준의 LLM 분석.
 
-### 작업
+**선행 조건**: Phase 1 자동화 7일 이상 무인 가동 완료. Phase 2.0과 병행 개발 가능 (단, Vercel 배포는 Phase 2.0 이후).
 
-- [ ] 이상탐지 모듈 4종 (`detectors/`)
-  - rank_surge, price_change, review_velocity, new_entrant
-- [ ] 추가 탐지 2종
-  - promo_start, wishlist_surge
-- [ ] Snowflake 풀러 (`matchers/snowflake_pull.py`)
-- [ ] 벡터 매칭 (`matchers/vector_match.py`)
-- [ ] Ollama 컨테이너 + Qwen 2.5 14B 모델 다운로드
-- [ ] LLM 클라이언트 (`agent/llm_client.py`)
-- [ ] 분석 프롬프트 v1 (`agent/prompts.py`)
-- [ ] 분석 파이프라인 (`agent/analyst.py`)
-- [ ] 분석 결과 검수 도구 (간이 CLI)
-- [ ] 50건 사람 검수 → 프롬프트 튜닝
+> 설계: `docs/phase-2.1-design.md` / 작업분할: `docs/phase-2.1-tasks.md` / ADR: ADR-024, ADR-025
 
-### 검증 게이트 2
-- [ ] 무작위 20건 LLM 분석 → IT팀장이 "사용 가능" 판정 70% 이상
-- [ ] 1건 분석 평균 latency < 15초
-- [ ] strategy_recommendation JSON 파싱 실패율 < 5%
-- [ ] 환각 (존재하지 않는 자사 SKU 언급 등) 발견 시 즉시 수정
+### 작업 (단계 A~H)
+
+- [ ] **단계 A** — 마이그레이션 00015·00016 (`anomalies` + `agent_analyses`)
+- [ ] **단계 B** — `worker/detectors/` 6종 (`rank_surge`, `price_change`, `review_velocity`, `new_entrant`, `promo_start`, `wishlist_surge`)
+- [ ] **단계 C** — `worker/matchers/` (`embedder` + `snowflake_pull` + `vector_match` + `combiner`)
+- [ ] **단계 D** — GPU 서버 Ollama 셋업 + Qwen 2.5 14B Q4_K_M 다운로드
+- [ ] **단계 E** — `worker/agent/` (`llm_client` + `prompts v1` + `analyst` + `validators`)
+- [ ] **단계 F** — viewer `/trends`·`/matches`·`/reports/[date]` 실연결
+- [ ] **단계 G** — 발송 모듈 (`slack` + `notion` + `html_report`)
+- [ ] **단계 H** — 통합 테스트 50건 검수 + 프롬프트 튜닝 + `slack_pending` 정정 SQL
+
+### 검증 게이트 2.1
+- [ ] 무인 탐지 7일 연속 정상 (anomalies ≥ 1건/일)
+- [ ] pgvector 매칭: 이상 상품 중 자사 유사 상품 발견율 ≥ 60%
+- [ ] Snowflake SKU 조회 실패율 < 5%
+- [ ] LLM 분석 JSON 파싱 실패율 < 5%
+- [ ] 분석 1건 latency < 15초 (p95)
+- [ ] IT팀장 무작위 20건 검수 → "사용 가능" 70% 이상
+- [ ] 환각 (존재하지 않는 자사 SKU) 0건
 
 ## Phase 3 — 발송·뷰어·운영화 (Week 5~6)
 
@@ -235,3 +262,6 @@ Phase 1.6 부트스트랩 후 발견 — DART `finstate` API 는 사업보고서
   - Phase 3.2 일부 ✅ (viewer 4개 화면 실연결)
   - 잔여 부채 청소 (musinsa_brand_id 백필, 썸네일, hydration)
   - Phase 4 Backlog 에 wackywilly slug + DART Phase 2 통합 추가
+  - **Phase 2 → Phase 2.0 + 2.1 재구성**: ADR-023·024·025 확정
+    - Phase 2.0 설계·작업분할 문서 완료 (`phase-2.0-design.md`, `phase-2.0-tasks.md`)
+    - Phase 2.1 설계·작업분할 문서 완료 (`phase-2.1-design.md`, `phase-2.1-tasks.md`)

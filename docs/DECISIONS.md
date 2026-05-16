@@ -456,6 +456,65 @@ Vision API 불필요로 결정 변경. ADR-022 참조.
 
 ---
 
+## ADR-023: Phase 2.0 인증·권한 아키텍처
+
+**상태**: Accepted (2026-05-16) · Phase 2.0 단계 A~F 적용 예정
+
+**맥락**: 현재 viewer는 미인증 공개 접근 + service_role 우회 쓰기 구조. 다인 사용 시 행위자 추적 불가, Vercel 배포 전 보안 요건 미충족.
+
+**결정**: Supabase Auth + 이메일+비밀번호 + `@bcave.co.kr` 도메인 제한 + 2단계 권한 (admin / viewer).
+
+**대안 검토**:
+- Magic Link — SMTP 안정성 우려, 사내 UX 낯섦으로 기각
+- SSO (Google·Microsoft) — 연동 복잡도 대비 사내 규모에 과잉으로 기각
+- Magic Link + 비밀번호 병행 — 구현 복잡도 증가로 기각
+
+**결과**:
+- 공개 읽기(anon SELECT)는 유지. 쓰기 경로에만 인증 주입.
+- `supabaseAdmin()`(service_role)은 RLS bypass 용도로 제한 유지. 호출 전 세션 검증 필수.
+- actor 필드는 하드코딩 문자열 → `user.email` 동적 주입 (Phase 2.0 단계 F)
+- 추후 3단계 권한 고도화 예정 (Notion 별도 메모)
+
+---
+
+## ADR-024: Phase 2.1 이상탐지 임계값 정책
+
+**상태**: Accepted (2026-05-16) · Phase 2.1 단계 B 적용 예정
+
+**맥락**: 이상탐지 6종의 임계값을 어디에 보관하고 어떻게 튜닝할지 결정 필요.
+
+**결정**: 임계값은 코드 상수 (`worker/detectors/_thresholds.py`). 변경은 코드 PR로. DB 설정 테이블은 Phase 4 이후 검토.
+
+**대안 검토**:
+- DB 설정 테이블 (`detector_config`) — 코드 배포 없이 값 변경 가능하지만, 변경 이력 추적이 git log에서 사라지는 단점
+- viewer에서 조정 UI — 운영 편의성 높으나 Phase 2 범위 초과, 남용 위험
+
+**결과**:
+- 임계값 변경 이력 = git log (감사 가능)
+- 운영 단순화 (설정 테이블 스키마·UI 불필요)
+- 단점: 임계값 바꿀 때마다 배포 필요 → 초기 튜닝 기간(Phase 2.1 단계 H) 중 여러 번 배포 예상
+
+---
+
+## ADR-025: Phase 2.1 LLM 환각 검증 정책
+
+**상태**: Accepted (2026-05-16) · Phase 2.1 단계 E 적용 예정
+
+**맥락**: Qwen 2.5 14B가 입력에 없는 자사 SKU나 가격을 만들어내는 환각 발생 가능. 잘못된 전략 제안이 실무자에게 전달되면 오판 위험.
+
+**결정**: `validators.py`가 `strategy_recommendation` 텍스트에서 SKU 패턴을 정규식으로 추출 → 입력으로 받은 `valid_skus` 목록과 대조. 환각 발견 시 **분석 결과 폐기**, `anomaly.analyzed = false` 유지, 워커 로그에 경보.
+
+**대안 검토**:
+- 환각 통과 — 빠르지만 데이터 신뢰 하락
+- LLM 재호출 (retry) — latency 2배, 환각이 구조적이면 의미 없음
+
+**결과**:
+- 데이터 신뢰 우선 정책
+- 환각 발생 anomaly는 다음 날 재분석 대상 (누락 방지)
+- 환각 건수를 `agent_analyses` 외부 로그로 추적 → 프롬프트 v2 작성 트리거 기준 (누적 환각 > 분석 5%)
+
+---
+
 ## (템플릿) ADR-NNN: 제목
 
 **상태**: Proposed / Accepted / Deprecated / Superseded by ADR-NNN
