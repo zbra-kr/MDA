@@ -1,5 +1,5 @@
 "use client";
-// Phase 1.9 — Brand 추가 모달 (무신사 검색 + 자체몰 직접 입력).
+// Phase 1.9 — Brand 추가 모달 (무신사 검색 다중선택 + 자체몰 직접 입력).
 
 import { useState, useRef } from "react";
 import { searchMusinsaBrand, addCustomBrand } from "../actions";
@@ -19,8 +19,8 @@ export function AddBrandModal({ companyId, companyName, onClose }: Props) {
   const [results, setResults] = useState<MusinsaBrandItem[]>([]);
   const [searchMsg, setSearchMsg] = useState("");
   const [searching, setSearching] = useState(false);
-  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
-  const selectedRef = useRef<MusinsaBrandItem | null>(null);
+  const [selectedSlugs, setSelectedSlugs] = useState<Set<string>>(new Set());
+  const selectedMapRef = useRef<Map<string, MusinsaBrandItem>>(new Map());
 
   // 자체몰 직접 입력
   const [customName, setCustomName] = useState("");
@@ -28,6 +28,7 @@ export function AddBrandModal({ companyId, companyName, onClose }: Props) {
   const [reasoning, setReasoning] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
+  const [submitProgress, setSubmitProgress] = useState<{ done: number; total: number } | null>(null);
   const [submitError, setSubmitError] = useState("");
 
   async function handleSearch() {
@@ -35,82 +36,77 @@ export function AddBrandModal({ companyId, companyName, onClose }: Props) {
     if (!kw || searching) return;
     setSearchMsg("");
     setResults([]);
-    setSelectedSlug(null);
-    selectedRef.current = null;
+    setSelectedSlugs(new Set());
+    selectedMapRef.current = new Map();
     setSearching(true);
     try {
       const res = await searchMusinsaBrand(kw);
-      if (res.error) {
-        setSearchMsg(res.error);
-        return;
-      }
+      if (res.error) { setSearchMsg(res.error); return; }
       const items = res.items ?? [];
       setResults(items);
-      if (items.length === 0) {
-        setSearchMsg("검색 결과 없음 — 브랜드 전체명을 정확히 입력해 주세요.");
-      }
+      if (items.length === 0) setSearchMsg("검색 결과 없음 — 브랜드 전체명을 정확히 입력해 주세요.");
     } finally {
       setSearching(false);
     }
   }
 
-  function handleSelect(item: MusinsaBrandItem) {
-    if (selectedSlug === item.slug) {
-      setSelectedSlug(null);
-      selectedRef.current = null;
-    } else {
-      setSelectedSlug(item.slug);
-      selectedRef.current = item;
-    }
+  function handleToggle(item: MusinsaBrandItem) {
+    setSelectedSlugs((prev) => {
+      const next = new Set(prev);
+      if (next.has(item.slug)) {
+        next.delete(item.slug);
+        selectedMapRef.current.delete(item.slug);
+      } else {
+        next.add(item.slug);
+        selectedMapRef.current.set(item.slug, item);
+      }
+      return next;
+    });
   }
 
   async function handleSubmit() {
     if (submitting) return;
     setSubmitError("");
 
-    const currentSelected = selectedRef.current;
+    if (tab === "musinsa") {
+      const selected = Array.from(selectedMapRef.current.values());
+      if (selected.length === 0) { setSubmitError("브랜드를 하나 이상 선택해 주세요."); return; }
+      setSubmitting(true);
+      setSubmitProgress({ done: 0, total: selected.length });
+      const errors: string[] = [];
+      try {
+        for (let i = 0; i < selected.length; i++) {
+          const item = selected[i];
+          const result = await addCustomBrand(companyId, item.name, item.slug, reasoning, item.slug);
+          if (result.error) errors.push(`${item.name}: ${result.error}`);
+          setSubmitProgress({ done: i + 1, total: selected.length });
+        }
+        if (errors.length > 0) {
+          setSubmitError(errors.join(" / "));
+        } else {
+          onClose();
+        }
+      } finally {
+        setSubmitting(false);
+        setSubmitProgress(null);
+      }
+      return;
+    }
 
-    if (tab === "musinsa" && !currentSelected) {
-      setSubmitError("브랜드를 선택해 주세요.");
-      return;
-    }
-    if (tab === "custom" && !customName.trim()) {
-      setSubmitError("브랜드명을 입력해 주세요.");
-      return;
-    }
-    if (tab === "custom" && !customSlug.trim()) {
-      setSubmitError("슬러그를 입력해 주세요.");
-      return;
-    }
-
+    // 자체몰
+    if (!customName.trim()) { setSubmitError("브랜드명을 입력해 주세요."); return; }
+    if (!customSlug.trim()) { setSubmitError("슬러그를 입력해 주세요."); return; }
     setSubmitting(true);
     try {
-      let result: { error?: string };
-      if (tab === "musinsa" && currentSelected) {
-        result = await addCustomBrand(
-          companyId,
-          currentSelected.name,
-          currentSelected.slug,
-          reasoning,
-          currentSelected.slug,
-        );
-      } else {
-        result = await addCustomBrand(
-          companyId,
-          customName.trim(),
-          customSlug.trim(),
-          reasoning,
-        );
-      }
-      if (result.error) {
-        setSubmitError(result.error);
-      } else {
-        onClose();
-      }
+      const result = await addCustomBrand(companyId, customName.trim(), customSlug.trim(), reasoning);
+      if (result.error) { setSubmitError(result.error); }
+      else { onClose(); }
     } finally {
       setSubmitting(false);
     }
   }
+
+  const selectedCount = selectedSlugs.size;
 
   return (
     <div
@@ -124,10 +120,7 @@ export function AddBrandModal({ companyId, companyName, onClose }: Props) {
             <p className="text-sm font-semibold text-fg-primary">Brand 추가</p>
             <p className="text-xs text-fg-quaternary mt-0.5">{companyName}</p>
           </div>
-          <button
-            onClick={onClose}
-            className="text-fg-quaternary hover:text-fg-primary transition-colors text-lg leading-none"
-          >
+          <button onClick={onClose} className="text-fg-quaternary hover:text-fg-primary transition-colors text-lg leading-none">
             ×
           </button>
         </div>
@@ -137,6 +130,7 @@ export function AddBrandModal({ companyId, companyName, onClose }: Props) {
           {(["musinsa", "custom"] as const).map((t) => (
             <button
               key={t}
+              type="button"
               onClick={() => setTab(t)}
               className={`px-4 py-2 text-sm transition-colors ${
                 tab === t
@@ -158,10 +152,11 @@ export function AddBrandModal({ companyId, companyName, onClose }: Props) {
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
-                  placeholder="브랜드명 전체명 검색 (예: 내셔널지오그래픽)"
+                  placeholder="브랜드 전체명 검색 (예: 내셔널지오그래픽)"
                   className="flex-1 text-sm px-3 py-2 bg-sunken border border-border-hair rounded-md text-fg-primary placeholder:text-fg-quaternary focus:outline-none focus:border-fg-tertiary"
                 />
                 <button
+                  type="button"
                   onClick={handleSearch}
                   disabled={searching}
                   className="shrink-0 px-4 py-2 text-sm bg-fg-primary text-canvas rounded-md hover:bg-fg-secondary transition-colors disabled:opacity-40"
@@ -170,40 +165,55 @@ export function AddBrandModal({ companyId, companyName, onClose }: Props) {
                 </button>
               </div>
               <p className="text-xs text-fg-quaternary -mt-2">
-                무신사 API 특성상 전체명 또는 영문명으로 검색해야 결과가 나옵니다.
+                전체명 또는 영문명으로 검색하세요. 복수 선택 후 한 번에 저장할 수 있습니다.
               </p>
               {searchMsg && <p className="text-xs text-trend-down -mt-2">{searchMsg}</p>}
               {results.length > 0 && (
-                <ul className="flex flex-col gap-1">
-                  {results.map((item) => {
-                    const isSelected = selectedSlug === item.slug;
-                    return (
-                      <li key={item.slug}>
-                        <button
-                          type="button"
-                          onClick={() => handleSelect(item)}
-                          className={`w-full text-left px-3 py-2 rounded-md border text-sm transition-colors ${
-                            isSelected
-                              ? "bg-chart-1/10 border-chart-1/30 text-fg-primary"
-                              : "bg-raised border-border-hair text-fg-secondary hover:bg-hover"
-                          }`}
-                        >
-                          <span className="font-medium">{item.name}</span>
-                          <span className="ml-2 text-xs font-mono text-fg-quaternary">{item.slug}</span>
-                          {item.isExclusive && (
-                            <span className="ml-1.5 text-2xs font-mono px-1 py-px rounded-sm bg-chart-2/10 text-chart-2 border border-chart-2/20">독점</span>
-                          )}
-                          {item.isFlagship && (
-                            <span className="ml-1 text-2xs font-mono px-1 py-px rounded-sm bg-chart-3/10 text-chart-3 border border-chart-3/20">플래그십</span>
-                          )}
-                          {isSelected && (
-                            <span className="ml-2 text-2xs font-mono text-chart-1">선택됨</span>
-                          )}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
+                <>
+                  {selectedCount > 0 && (
+                    <p className="text-xs font-mono text-chart-1 -mt-2">
+                      {selectedCount}개 선택됨
+                    </p>
+                  )}
+                  <ul className="flex flex-col gap-1">
+                    {results.map((item) => {
+                      const isSelected = selectedSlugs.has(item.slug);
+                      return (
+                        <li key={item.slug}>
+                          <button
+                            type="button"
+                            onClick={() => handleToggle(item)}
+                            className={`w-full text-left px-3 py-2 rounded-md border text-sm transition-colors ${
+                              isSelected
+                                ? "bg-chart-1/10 border-chart-1/30 text-fg-primary"
+                                : "bg-raised border-border-hair text-fg-secondary hover:bg-hover"
+                            }`}
+                          >
+                            <div className="flex items-center gap-1.5">
+                              <span
+                                className={`shrink-0 w-4 h-4 rounded-sm border flex items-center justify-center text-2xs transition-colors ${
+                                  isSelected
+                                    ? "bg-chart-1 border-chart-1 text-canvas"
+                                    : "border-border-hair bg-sunken"
+                                }`}
+                              >
+                                {isSelected && "✓"}
+                              </span>
+                              <span className="font-medium">{item.name}</span>
+                              <span className="text-xs font-mono text-fg-quaternary">{item.slug}</span>
+                              {item.isExclusive && (
+                                <span className="text-2xs font-mono px-1 py-px rounded-sm bg-chart-2/10 text-chart-2 border border-chart-2/20">독점</span>
+                              )}
+                              {item.isFlagship && (
+                                <span className="text-2xs font-mono px-1 py-px rounded-sm bg-chart-3/10 text-chart-3 border border-chart-3/20">플래그십</span>
+                              )}
+                            </div>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
               )}
             </>
           ) : (
@@ -245,10 +255,16 @@ export function AddBrandModal({ companyId, companyName, onClose }: Props) {
 
         {/* 푸터 */}
         <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-border-hair shrink-0">
+          {submitProgress && (
+            <p className="flex-1 text-xs font-mono text-fg-tertiary">
+              저장 중... {submitProgress.done}/{submitProgress.total}
+            </p>
+          )}
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm text-fg-secondary hover:text-fg-primary transition-colors"
+            disabled={submitting}
+            className="px-4 py-2 text-sm text-fg-secondary hover:text-fg-primary transition-colors disabled:opacity-40"
           >
             취소
           </button>
@@ -258,7 +274,11 @@ export function AddBrandModal({ companyId, companyName, onClose }: Props) {
             disabled={submitting}
             className="px-4 py-2 text-sm bg-fg-primary text-canvas rounded-md hover:bg-fg-secondary transition-colors disabled:opacity-40"
           >
-            {submitting ? "저장 중..." : "저장"}
+            {submitting
+              ? "저장 중..."
+              : tab === "musinsa" && selectedCount > 0
+                ? `${selectedCount}개 저장`
+                : "저장"}
           </button>
         </div>
       </div>
