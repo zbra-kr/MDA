@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { UserMenu } from "@/components/radar/user-menu";
 
 const TABS = [
   { href: "/reports/today", label: "대시보드", key: "dashboard" },
@@ -18,18 +19,38 @@ const TABS = [
   { href: "/settings", label: "설정", key: "settings" },
 ] as const;
 
+const ADMIN_TABS = [
+  { href: "/admin/users", label: "사용자 관리", key: "admin_users" },
+  { href: "/admin/audit", label: "감사 로그", key: "admin_audit" },
+] as const;
+
 interface Crumb {
   label: string;
   href?: string;
 }
 
 interface Props {
-  currentTab?: (typeof TABS)[number]["key"];
+  currentTab?: string;
   crumbs?: Crumb[];
-  tabCounts?: Partial<Record<(typeof TABS)[number]["key"], number>>;
+  tabCounts?: Partial<Record<string, number>>;
+  userEmail?: string | null;
+  userFullName?: string | null;
+  userRole?: "admin" | "viewer" | null;
 }
 
-export function AppBar({ currentTab = "dashboard", crumbs = [], tabCounts }: Props) {
+export function AppBar({
+  currentTab = "dashboard",
+  crumbs = [],
+  tabCounts,
+  userEmail,
+  userFullName,
+  userRole,
+}: Props) {
+  const visibleTabs = [
+    ...TABS,
+    ...(userRole === "admin" ? ADMIN_TABS : []),
+  ];
+
   return (
     <header className="sticky top-0 z-50 bg-canvas/95 backdrop-blur border-b border-border-subtle">
       {/* row 1 */}
@@ -75,7 +96,7 @@ export function AppBar({ currentTab = "dashboard", crumbs = [], tabCounts }: Pro
 
         <div className="flex-1" />
 
-        {/* quick search (정적 — 인터랙션은 Phase 3) */}
+        {/* quick search */}
         <div className="hidden md:flex items-center gap-2 h-7 px-2.5 rounded-md border border-border text-sm text-fg-tertiary">
           <Search size={13} />
           <span>브랜드 · 상품 검색</span>
@@ -86,19 +107,27 @@ export function AppBar({ currentTab = "dashboard", crumbs = [], tabCounts }: Pro
 
         <ThemeToggle />
 
-        {/* user */}
-        <div
-          title="정호철 · IT팀장"
-          className="w-7 h-7 rounded-full bg-raised border border-border-strong text-2xs font-medium text-fg-secondary inline-flex items-center justify-center shrink-0"
-        >
-          정
-        </div>
+        {/* 사용자 메뉴 */}
+        {userEmail ? (
+          <UserMenu
+            email={userEmail}
+            fullName={userFullName ?? ""}
+            isAdmin={userRole === "admin"}
+          />
+        ) : (
+          <Link
+            href="/auth/login"
+            className="h-7 px-3 rounded-md border border-border text-xs font-medium text-fg-secondary hover:text-fg-primary hover:border-border-strong transition-colors inline-flex items-center"
+          >
+            로그인
+          </Link>
+        )}
       </div>
 
       {/* row 2 — tabs */}
       <div className="max-w-[1280px] mx-auto px-10 h-10 flex items-center gap-0">
         <nav className="flex items-center gap-0">
-          {TABS.map((t) => {
+          {visibleTabs.map((t) => {
             const active = t.key === currentTab;
             const count = tabCounts?.[t.key];
             return (

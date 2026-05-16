@@ -1,16 +1,20 @@
 "use server";
 // viewer/app/(app)/brands/actions.ts
-// service_role 쓰기 전용 Server Actions.
-// 클라이언트 코드에서는 import 불가 — 'use server' 경계 내에서만 실행.
+// Phase 2.0 — 세션 검증 후 service_role 쓰기 (ADR-023).
+// toggleCompetitor: viewer 이상 인증 확인.
 
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { requireAuth } from "@/lib/auth";
 
 export async function toggleCompetitor(
   brandId: string,
   currentValue: boolean,
 ): Promise<{ error?: string }> {
   try {
+    // viewer 이상이면 가능 — admin 불필요
+    await requireAuth();
+
     const admin = supabaseAdmin();
     const { error } = await admin
       .from("brands")

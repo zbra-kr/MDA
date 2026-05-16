@@ -1,13 +1,13 @@
 "use server";
 // viewer/app/(app)/insights/manage/actions.ts
-// Phase 1.9 — 매핑 관리 Server Actions (service_role 쓰기).
-// is_own=true brand 는 모든 변경 금지.
-// actor = '정호철' 고정 (Phase 3 Auth 도입 후 user_id 전환).
+// Phase 2.0 — 세션 검증 + admin 권한 확인 후 service_role 쓰기.
+// actor: user.email (동적, 하드코딩 제거)
+// ADR-023: service_role은 RLS bypass 목적으로만 유지. 호출 전 세션 검증 필수.
 
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { requireAuth, requireAdmin } from "@/lib/auth";
 
-const ACTOR = "정호철";
 const MANAGE_PATH = "/insights/manage";
 
 // ─── 내부 헬퍼 ─────────────────────────────────────────────────────────────
@@ -20,7 +20,10 @@ interface BrandRow {
   company_id: string | null;
 }
 
-async function _fetchBrand(admin: ReturnType<typeof supabaseAdmin>, brandId: string): Promise<BrandRow | null> {
+async function _fetchBrand(
+  admin: ReturnType<typeof supabaseAdmin>,
+  brandId: string,
+): Promise<BrandRow | null> {
   const { data, error } = await admin
     .from("brands")
     .select("id, slug, name, is_own, company_id")
@@ -30,7 +33,10 @@ async function _fetchBrand(admin: ReturnType<typeof supabaseAdmin>, brandId: str
   return data as BrandRow;
 }
 
-async function _fetchCompanyName(admin: ReturnType<typeof supabaseAdmin>, companyId: string): Promise<string> {
+async function _fetchCompanyName(
+  admin: ReturnType<typeof supabaseAdmin>,
+  companyId: string,
+): Promise<string> {
   const { data } = await admin
     .from("companies")
     .select("name")
@@ -47,8 +53,10 @@ export async function assignBrandToCompany(
   reasoning: string,
 ): Promise<{ error?: string }> {
   try {
-    const admin = supabaseAdmin();
+    const { user } = await requireAdmin();
+    const actor = user.email ?? user.id;
 
+    const admin = supabaseAdmin();
     const brand = await _fetchBrand(admin, brandId);
     if (!brand) return { error: "브랜드를 찾을 수 없습니다." };
     if (brand.is_own) return { error: "자사 브랜드는 매핑을 변경할 수 없습니다." };
@@ -76,7 +84,7 @@ export async function assignBrandToCompany(
       old_company_name: oldCompanyName || null,
       new_company_id: newCompanyId,
       new_company_name: newCompanyName,
-      actor: ACTOR,
+      actor,
       source: "manual_ui",
       reasoning: reasoning || null,
     });
@@ -95,8 +103,10 @@ export async function removeBrandFromCompany(
   reasoning: string,
 ): Promise<{ error?: string }> {
   try {
-    const admin = supabaseAdmin();
+    const { user } = await requireAdmin();
+    const actor = user.email ?? user.id;
 
+    const admin = supabaseAdmin();
     const brand = await _fetchBrand(admin, brandId);
     if (!brand) return { error: "브랜드를 찾을 수 없습니다." };
     if (brand.is_own) return { error: "자사 브랜드는 매핑을 변경할 수 없습니다." };
@@ -119,7 +129,7 @@ export async function removeBrandFromCompany(
       old_company_name: oldCompanyName || null,
       new_company_id: null,
       new_company_name: null,
-      actor: ACTOR,
+      actor,
       source: "manual_ui",
       reasoning: reasoning || null,
     });
@@ -145,6 +155,9 @@ export async function searchMusinsaBrand(
   keyword: string,
 ): Promise<{ items?: MusinsaBrandItem[]; error?: string }> {
   try {
+    // 검색은 로그인된 사용자 누구나 (viewer 이상)
+    await requireAuth();
+
     const url = `https://api.musinsa.com/api2/dp/v1/search/brand?gf=A&keyword=${encodeURIComponent(keyword)}`;
     const res = await fetch(url, {
       headers: {
@@ -181,6 +194,9 @@ export async function addCustomBrand(
   musinsaSlug?: string,
 ): Promise<{ error?: string }> {
   try {
+    const { user } = await requireAdmin();
+    const actor = user.email ?? user.id;
+
     const admin = supabaseAdmin();
 
     // slug 중복 확인 — 이미 존재하면 INSERT 대신 company_id 재매핑
@@ -195,15 +211,21 @@ export async function addCustomBrand(
     if (existing) {
       const e = existing as BrandRow;
       if (e.is_own) return { error: "자사 브랜드는 매핑을 변경할 수 없습니다." };
-      if (e.company_id === companyId) return { error: "이미 이 회사에 매핑된 브랜드입니다." };
+      if (e.company_id === companyId)
+        return { error: "이미 이 회사에 매핑된 브랜드입니다." };
 
       const oldCompanyId = e.company_id;
-      const oldCompanyName = oldCompanyId ? await _fetchCompanyName(admin, oldCompanyId) : "";
+      const oldCompanyName = oldCompanyId
+        ? await _fetchCompanyName(admin, oldCompanyId)
+        : "";
       const action = oldCompanyId ? "reassign" : "add";
 
       const { error: updateErr } = await admin
         .from("brands")
-        .update({ company_id: companyId, company_mapping_confidence: musinsaSlug ? "high" : "medium" })
+        .update({
+          company_id: companyId,
+          company_mapping_confidence: musinsaSlug ? "high" : "medium",
+        })
         .eq("id", e.id);
       if (updateErr) return { error: updateErr.message };
 
@@ -216,7 +238,7 @@ export async function addCustomBrand(
         old_company_name: oldCompanyName || null,
         new_company_id: companyId,
         new_company_name: companyName || null,
-        actor: ACTOR,
+        actor,
         source: "manual_ui",
         reasoning: reasoning || null,
       });
@@ -249,7 +271,7 @@ export async function addCustomBrand(
       old_company_name: null,
       new_company_id: companyId,
       new_company_name: companyName || null,
-      actor: ACTOR,
+      actor,
       source: "manual_ui",
       reasoning: reasoning || null,
     });
