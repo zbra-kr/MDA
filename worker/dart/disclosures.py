@@ -23,12 +23,27 @@ from datetime import date
 
 import pandas as pd
 from loguru import logger
+from tenacity import retry, stop_after_attempt, wait_exponential
 from worker.dart.models import Disclosure
 
 # DART API 호출 사이 대기 (공시 list는 1회 호출로 기간 전체 — 회사당 3 kind 호출)
 _API_DELAY_SEC = 0.5
 
 _DART_URL_TEMPLATE = 'https://dart.fss.or.kr/dsaf001/main.do?rcpNo={rcept_no}'
+
+
+# ---------------------------------------------------------------------------
+# API 호출 — tenacity retry (일시 오류 3회, 2→4→30초 backoff)
+# ---------------------------------------------------------------------------
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=2, min=2, max=30),
+    reraise=True,
+)
+def _call_dart_list(dart, corp_code: str, start: str, end: str, kind: str):
+    """dart.list() 호출. 일시 실패 시 최대 3회 재시도."""
+    return dart.list(corp_code, start=start, end=end, kind=kind)
 
 # report_nm → disclosure_subtype 키워드 매핑 (우선순위 순서로 배치)
 _SUBTYPE_KEYWORDS: list[str] = [
@@ -127,7 +142,7 @@ def fetch_disclosures(
     for kind in kinds:
         time.sleep(_API_DELAY_SEC)
         try:
-            df = dart.list(corp_code, start=start_date, end=end_date, kind=kind)
+            df = _call_dart_list(dart, corp_code, start_date, end_date, kind)
 
             if df is None or (hasattr(df, 'empty') and df.empty):
                 logger.bind(corp_code=corp_code, kind=kind).debug('dart_list_empty')

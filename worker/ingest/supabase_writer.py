@@ -187,19 +187,24 @@ def insert_snapshot(client: Client, snapshot: dict[str, Any]) -> None:
     ).execute()
 
 
-def insert_snapshots_bulk(
+def upsert_snapshots_bulk(
     client: Client,
     snapshots: list[dict[str, Any]],
     batch_size: int = 200,
 ) -> int:
-    """bulk insert — batch_size 건씩 분할. 반환: 성공 건수."""
+    """스냅샷 배치 upsert — batch_size 건씩 분할.
+
+    ON CONFLICT DO UPDATE → 당일 재실행 시 최신 값으로 덮어쓰기.
+    _upsert_snapshots_bulk(private)과 동일 동작, configurable batch_size 제공.
+    반환: 성공 건수.
+    """
     total = 0
     for i in range(0, len(snapshots), batch_size):
         batch = snapshots[i : i + batch_size]
         try:
             res = (
                 client.table("product_snapshots")
-                .upsert(batch, on_conflict="product_id,snapshot_date", ignore_duplicates=True)
+                .upsert(batch, on_conflict="product_id,snapshot_date")
                 .execute()
             )
             total += len(res.data or [])

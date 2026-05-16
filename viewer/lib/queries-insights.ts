@@ -224,7 +224,8 @@ export async function getCompanyDashboard(
         };
       })(),
     };
-  } catch {
+  } catch (err) {
+    console.error("[queries-insights] getCompanyDashboard failed", err);
     return null;
   }
 }
@@ -301,7 +302,8 @@ export async function getCompetitorComparisonData(): Promise<CompanyFinSummary[]
     });
 
     return rows;
-  } catch {
+  } catch (err) {
+    console.error("[queries-insights] getCompetitorComparisonData failed", err);
     return [];
   }
 }
@@ -356,7 +358,8 @@ export async function getCategoryData(): Promise<BrandWithCompany[]> {
       company_name: b.companies?.name ?? null,
       company_revenue_mkrw: b.company_id ? (revMap.get(b.company_id) ?? null) : null,
     }));
-  } catch {
+  } catch (err) {
+    console.error("[queries-insights] getCategoryData failed", err);
     return [];
   }
 }
@@ -403,7 +406,8 @@ export async function getManageCompanies(): Promise<ManageCompanyItem[]> {
     });
 
     return rows;
-  } catch {
+  } catch (err) {
+    console.error("[queries-insights] getManageCompanies failed", err);
     return [];
   }
 }
@@ -431,7 +435,8 @@ export async function getManageBrands(companyId: string): Promise<ManageBrandRow
       .eq("company_id", companyId)
       .order("name");
     return (data ?? []) as unknown as ManageBrandRow[];
-  } catch {
+  } catch (err) {
+    console.error("[queries-insights] getManageBrands failed", err);
     return [];
   }
 }
@@ -478,7 +483,8 @@ export async function getMediumConfidenceBrands(): Promise<ConflictBrandRow[]> {
       company_name: b.companies?.name ?? null,
       is_own: b.is_own,
     }));
-  } catch {
+  } catch (err) {
+    console.error("[queries-insights] getMediumConfidenceBrands failed", err);
     return [];
   }
 }
@@ -558,7 +564,8 @@ export async function getInsightCompanyList(): Promise<InsightCompanyListItem[]>
     });
 
     return rows;
-  } catch {
+  } catch (err) {
+    console.error("[queries-insights] getInsightCompanyList failed", err);
     return [];
   }
 }

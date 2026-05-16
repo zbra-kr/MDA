@@ -15,6 +15,7 @@ import time
 
 import pandas as pd
 from loguru import logger
+from tenacity import retry, stop_after_attempt, wait_exponential
 from worker.dart.models import (
     REPRT_CODE_MAP,
     REPRT_QUARTER_MAP,
@@ -24,6 +25,20 @@ from worker.dart.models import (
 
 # DART API 호출 사이 최소 대기 (초)
 _API_DELAY_SEC = 1.0
+
+
+# ---------------------------------------------------------------------------
+# API 호출 — tenacity retry (일시 오류 3회, 2→4→30초 backoff)
+# ---------------------------------------------------------------------------
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=2, min=2, max=30),
+    reraise=True,
+)
+def _call_finstate(dart, corp_code: str, year: int, reprt_code: str):
+    """dart.finstate() 호출. 일시 실패 시 최대 3회 재시도."""
+    return dart.finstate(corp_code, year, reprt_code=reprt_code)
 
 
 # ---------------------------------------------------------------------------
@@ -122,7 +137,7 @@ def fetch_financials_for_company(
 
     try:
         time.sleep(_API_DELAY_SEC)
-        df = dart.finstate(corp_code, year, reprt_code=reprt_code)
+        df = _call_finstate(dart, corp_code, year, reprt_code)
 
         if df is None or (hasattr(df, 'empty') and df.empty):
             result.skipped = True

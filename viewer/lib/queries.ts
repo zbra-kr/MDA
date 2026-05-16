@@ -56,7 +56,8 @@ export async function getReportMeta(date: string) {
       total_anomalies: data?.total_anomalies ?? 0,
       duration_label,
     };
-  } catch {
+  } catch (err) {
+    console.error("[queries] getReportMeta failed", err);
     return {
       report_date: date,
       model_version: "—",
@@ -112,7 +113,8 @@ export async function getKpis(date: string) {
       own_matches,
       own_matches_delta: 0,
     };
-  } catch {
+  } catch (err) {
+    console.error("[queries] getKpis failed", err);
     return {
       total: 0,
       high: 0,
@@ -137,7 +139,8 @@ export async function getTodayFindings(date: string): Promise<TodayFinding[]> {
       .select("*")
       .order("severity", { ascending: false });
     return (data ?? []) as unknown as TodayFinding[];
-  } catch {
+  } catch (err) {
+    console.error("[queries] getTodayFindings failed", err);
     return [];
   }
 }
@@ -149,7 +152,8 @@ export async function getPipeline(): Promise<PipelineStage[]> {
     const sb = await supabaseServer();
     const { data } = await sb.from("v_pipeline_today").select("*");
     return (data ?? []) as unknown as PipelineStage[];
-  } catch {
+  } catch (err) {
+    console.error("[queries] getPipeline failed", err);
     return [];
   }
 }
@@ -167,7 +171,8 @@ export async function getSeverityDaily(
       end_date: endDate,
     });
     return (data ?? []) as SeverityDaily[];
-  } catch {
+  } catch (err) {
+    console.error("[queries] getSeverityDaily failed", err);
     return [];
   }
 }
@@ -187,7 +192,8 @@ export async function getFinding(
       .eq("anomaly_id", anomalyId)
       .maybeSingle();
     return data ? (data as unknown as TodayFinding) : null;
-  } catch {
+  } catch (err) {
+    console.error("[queries] getFinding failed", err);
     return null;
   }
 }
@@ -213,7 +219,8 @@ export async function getAnomalyKpis(anomalyId: string): Promise<AnomalyKpis> {
     });
     const rows = data ?? [];
     return rows.length > 0 ? (rows[0] as unknown as AnomalyKpis) : fallback;
-  } catch {
+  } catch (err) {
+    console.error("[queries] getAnomalyKpis failed", err);
     return fallback;
   }
 }
@@ -231,7 +238,8 @@ export async function getProductTrend(
       p_days: days,
     });
     return (data ?? []) as unknown as ProductTrendRow[];
-  } catch {
+  } catch (err) {
+    console.error("[queries] getProductTrend failed", err);
     return [];
   }
 }
@@ -253,7 +261,8 @@ export async function getAnalysis(
     // strategy_recommendation은 DB상 Json, 런타임에 StrategyRecommendation 객체
     const data = rawData as unknown as AgentAnalysis | null;
     return data ?? null;
-  } catch {
+  } catch (err) {
+    console.error("[queries] getAnalysis failed", err);
     return null;
   }
 }
@@ -269,7 +278,8 @@ export async function getMatches(productId: string): Promise<ProductMatch[]> {
       .eq("competitor_product_id", productId)
       .order("similarity_score", { ascending: false });
     return (data ?? []) as unknown as ProductMatch[];
-  } catch {
+  } catch (err) {
+    console.error("[queries] getMatches failed", err);
     return [];
   }
 }
@@ -300,7 +310,8 @@ export async function getActiveCategories(): Promise<CategoryRow[]> {
       .eq("depth", 1)
       .order("musinsa_code");
     return (data ?? []) as unknown as CategoryRow[];
-  } catch {
+  } catch (err) {
+    console.error("[queries] getActiveCategories failed", err);
     return [];
   }
 }
@@ -426,7 +437,8 @@ export async function getProductsToday(opts: {
     });
 
     return { rows, total: count ?? 0 };
-  } catch {
+  } catch (err) {
+    console.error("[queries] getProductsToday failed", err);
     return { rows: [], total: 0 };
   }
 }
@@ -537,7 +549,8 @@ export async function getCompanies(opts: {
     });
 
     return rows;
-  } catch {
+  } catch (err) {
+    console.error("[queries] getCompanies failed", err);
     return [];
   }
 }
@@ -665,7 +678,8 @@ export async function getBrands(opts: {
     const offset = (page - 1) * BRAND_PAGE_SIZE;
     const rows = filtered.slice(offset, offset + BRAND_PAGE_SIZE);
     return { rows, total: filtered.length, stats };
-  } catch {
+  } catch (err) {
+    console.error("[queries] getBrands failed", err);
     return empty;
   }
 }

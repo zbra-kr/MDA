@@ -231,11 +231,12 @@ def _quarterly_params() -> tuple[int, str]:
         return y, '11014'
 
 
-def cmd_weekly_disclosures(args: argparse.Namespace) -> None:
+def cmd_weekly_disclosures(args: argparse.Namespace) -> bool:
     """[운영 cron] 모든 회사 최근 7일 공시 fetch + upsert.
 
     새 공시 ON CONFLICT DO NOTHING. notified_to_slack=False (Phase 2 Slack 발송 대기).
     자사 공시도 정상 적재 — Slack 제외는 Phase 2 단계 H 의 SQL WHERE c.is_own=false 처리.
+    반환: 전체 성공 시 True, 1개사 이상 실패 시 False.
     """
     start, end = _weekly_date_range()
     logger.info(f"weekly_disclosures_start: {start} ~ {end}")
@@ -251,33 +252,43 @@ def cmd_weekly_disclosures(args: argparse.Namespace) -> None:
 
     total_inserted = 0
     total_skipped = 0
+    total_failed = 0
 
     for corp in corps:
-        disclosures = fetch_disclosures_for_company(
-            dart, corp['company_id'], corp['corp_code'], start, end,
-        )
-        if not disclosures:
-            continue
-        ir = upsert_disclosures(client, disclosures, bootstrap_mode=False)
-        total_inserted += ir.disclosures_inserted
-        total_skipped += ir.disclosures_skipped
+        try:
+            disclosures = fetch_disclosures_for_company(
+                dart, corp['company_id'], corp['corp_code'], start, end,
+            )
+            if not disclosures:
+                continue
+            ir = upsert_disclosures(client, disclosures, bootstrap_mode=False)
+            total_inserted += ir.disclosures_inserted
+            total_skipped += ir.disclosures_skipped
 
-        if ir.disclosures_inserted > 0:
-            logger.bind(
-                corp_name=corp['corp_name'],
-                inserted=ir.disclosures_inserted,
-            ).info('weekly_disclosures_new')
+            if ir.disclosures_inserted > 0:
+                logger.bind(
+                    corp_name=corp['corp_name'],
+                    inserted=ir.disclosures_inserted,
+                ).info('weekly_disclosures_new')
+        except Exception as exc:
+            logger.bind(corp_name=corp['corp_name'], error=str(exc)).error(
+                'weekly_disclosures_corp_failed'
+            )
+            total_failed += 1
 
     logger.info(
-        f"weekly_disclosures_done: inserted={total_inserted} skipped={total_skipped}"
+        f"weekly_disclosures_done: inserted={total_inserted} "
+        f"skipped={total_skipped} failed={total_failed}"
     )
+    return total_failed == 0
 
 
-def cmd_quarterly_financials(args: argparse.Namespace) -> None:
+def cmd_quarterly_financials(args: argparse.Namespace) -> bool:
     """[운영 cron] 현재 시점 직전 분기 재무 갱신.
 
     분기 매핑: 1월→전년연간(11011), 4월→Q1(11013), 7월→반기(11012), 10월→Q3(11014).
     companies.latest_* 컬럼 갱신.
+    반환: 전체 성공 시 True, 1개사 이상 실패 시 False.
     """
     bsns_year, reprt_code = _quarterly_params()
     logger.info(f"quarterly_financials_start: year={bsns_year} reprt={reprt_code}")
@@ -292,26 +303,41 @@ def cmd_quarterly_financials(args: argparse.Namespace) -> None:
 
     total_upserted = 0
     total_skipped = 0
+    total_failed = 0
 
     for corp in corps:
-        results = fetch_company_financials(
-            dart, corp['company_id'], corp['corp_code'],
-            years=[bsns_year],
-            reprt_codes=[reprt_code],
-        )
-        all_financials = [f for r in results for f in r.financials]
-        skipped = sum(1 for r in results if r.skipped)
+        try:
+            results = fetch_company_financials(
+                dart, corp['company_id'], corp['corp_code'],
+                years=[bsns_year],
+                reprt_codes=[reprt_code],
+            )
+            all_financials = [f for r in results for f in r.financials]
+            skipped = sum(1 for r in results if r.skipped)
+            errors = [r.error for r in results if r.error]
 
-        if all_financials:
-            ir = upsert_financials(client, all_financials)
-            total_upserted += ir.upserted
-            update_company_financials_cache(client, corp['company_id'], all_financials)
+            if all_financials:
+                ir = upsert_financials(client, all_financials)
+                total_upserted += ir.upserted
+                update_company_financials_cache(client, corp['company_id'], all_financials)
 
-        total_skipped += skipped
+            total_skipped += skipped
+            if errors:
+                logger.bind(corp_name=corp['corp_name'], errors=errors).warning(
+                    'quarterly_financials_corp_partial_error'
+                )
+                total_failed += len(errors)
+        except Exception as exc:
+            logger.bind(corp_name=corp['corp_name'], error=str(exc)).error(
+                'quarterly_financials_corp_failed'
+            )
+            total_failed += 1
 
     logger.info(
-        f"quarterly_financials_done: upserted={total_upserted} skipped={total_skipped}"
+        f"quarterly_financials_done: upserted={total_upserted} "
+        f"skipped={total_skipped} failed={total_failed}"
     )
+    return total_failed == 0
 
 
 def cmd_bootstrap_disclosures(args: argparse.Namespace) -> None:
@@ -397,9 +423,9 @@ def main() -> None:
     elif args.mode == 'bootstrap-disclosures':
         cmd_bootstrap_disclosures(args)
     elif args.mode == 'weekly-disclosures':
-        cmd_weekly_disclosures(args)
+        sys.exit(0 if cmd_weekly_disclosures(args) else 1)
     elif args.mode == 'quarterly-financials':
-        cmd_quarterly_financials(args)
+        sys.exit(0 if cmd_quarterly_financials(args) else 1)
 
 
 if __name__ == '__main__':
