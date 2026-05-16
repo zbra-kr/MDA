@@ -1,12 +1,16 @@
 -- ============================================================
 -- B.CAVE Competitor Radar — anomalies (Phase 2.1 단계 A)
--- Version: 1.0  Date: 2026-05-17
+-- Version: 1.1  Date: 2026-05-17
 -- 적용 순서: 00015 이후
 --
 -- ⚠️  자동 적용 금지 — 정호철이 Supabase SQL Editor에서 적용.
+-- ⚠️  이전 시도로 테이블이 남아있을 경우를 위해 drop 후 재생성.
 -- ============================================================
 
-create table if not exists public.anomalies (
+-- 이전 시도 잔여물 제거 (데이터 없음 전제 — 재시도 멱등성)
+drop table if exists public.anomalies cascade;
+
+create table public.anomalies (
   id              uuid primary key default gen_random_uuid(),
   product_id      uuid not null references public.products(id),
   snapshot_id     uuid references public.product_snapshots(id),
