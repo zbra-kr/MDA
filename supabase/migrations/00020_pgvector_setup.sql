@@ -1,19 +1,24 @@
 -- ============================================================
 -- B.CAVE Competitor Radar — own_skus + product_matches (Phase 2.1 단계 C)
--- Version: 1.0  Date: 2026-05-17
+-- Version: 1.1  Date: 2026-05-17
 -- 적용 순서: 00019 이후
 --
 -- ⚠️  자동 적용 금지 — 정호철이 Supabase SQL Editor에서 적용.
 -- ⚠️  pgvector extension은 00001에서 이미 활성화 되어있음. idempotent.
+-- ⚠️  이전 시도 잔여물 제거 (데이터 없음 전제 — 재시도 멱등성).
 -- ============================================================
 
 create extension if not exists vector;
+
+-- 이전 시도 잔여물 제거 (product_matches → own_skus 순서로 drop)
+drop table if exists public.product_matches cascade;
+drop table if exists public.own_skus cascade;
 
 -- ─── own_skus ─────────────────────────────────────────────────────────────
 -- Snowflake에서 풀어온 자사(커버낫·리·와키윌리) SKU 마스터.
 -- source='snowflake'. embedding: bge-m3 (1024차원).
 
-create table if not exists public.own_skus (
+create table public.own_skus (
   id           uuid primary key default gen_random_uuid(),
   brand_slug   text not null references public.brands(slug),
   sku_code     text not null,
@@ -41,7 +46,7 @@ create index if not exists own_skus_embedding_idx
 -- competitor_product_id → products(id), own_sku_id → own_skus(id).
 -- diff_summary: 가격 차이·재고 상태·매출 등 combiner.py 생성 JSON (설계 3.4절).
 
-create table if not exists public.product_matches (
+create table public.product_matches (
   id                    uuid primary key default gen_random_uuid(),
   competitor_product_id uuid not null references public.products(id),
   own_sku_id            uuid not null references public.own_skus(id),
