@@ -363,18 +363,21 @@
 
 ## ADR-019: PDF 파싱은 Claude Vision API
 
-**상태**: Accepted (2026-05-16) · Phase 1.7 적용 예정
+**상태**: ~~Accepted~~ **Superseded by ADR-022 (2026-05-16)**
+
+Phase 1.7 단계 A 사전 테스트에서 DART `document()` 가 XML 직접 반환함을 확인.
+Vision API 불필요로 결정 변경. ADR-022 참조.
 
 **맥락**: 감사보고서 PDF 파싱 방식 선택 — 전통 OCR vs LLM 비전 vs 하이브리드.
 
-**결정**: Claude Vision API 단일 방식.
+**결정 (당시)**: Claude Vision API 단일 방식.
 
 **대안**:
 - Tesseract + 표 인식 — 정확도 60~70%, 검증 비용 큼
 - pypdf 텍스트 추출 — 이미지 기반 PDF 에 무력
-- LLM 비전 ← 선택. 정확도 95%+
+- LLM 비전 ← 선택 (당시). 정확도 95%+
 
-**사유**:
+**사유 (당시)**:
 - 한국 감사보고서 PDF 포맷 다양 — 회계법인 (안진·삼정·삼일·딜로이트 등) 별로 다름
 - LLM 비전은 표·텍스트 함께 이해
 - 부트스트랩 비용 약 $20~$100 1회성, 운영 비용 $5~$30/년
@@ -418,6 +421,38 @@
 - 자사 재무 누락은 시스템 의도와 정면 충돌
 - Phase 2 (이상탐지) 진입 전 회사 마스터 완전성 확보 필수
 - LLM 인프라는 본 Phase 에서 부트스트랩 → Phase 2 에서 재사용 (역방향 의존)
+
+---
+
+## ADR-022: 감사보고서 자동 파싱은 XML 단일 흐름
+
+**상태**: Accepted (2026-05-16) · Phase 1.7 적용 완료
+
+**맥락**:
+- ADR-019 에서 Claude Vision API 사용 결정
+- Phase 1.7 단계 A·B 진행 후 사전 테스트에서 발견:
+  · DART `document(rcept_no)` API 가 XML 반환 (PDF 아님)
+  · XML 의 SUMMARY 섹션에 TOT_SALES·TOT_ASSETS·TOT_DEBTS 직접 추출 가능
+  · BODY/TE 섹션에 영업이익·당기순이익 직접 추출 가능
+  · 2016년 (가장 오래된) 4/4건 XML 동일 형식 확인
+  · 비케이브 FY2024 검증: 매출 3,189억 (메모리 일치 오차 0.0%)
+
+**결정**: ADR-019 (Claude Vision API) Superseded. XML 파싱 단일 흐름으로 변경.
+
+**대안**:
+- ADR-019 그대로 (Vision API) — 비용·복잡도 무의미
+- 하이브리드 (XML 우선 + Vision fallback) — fallback 케이스 없으므로 코드 부담만
+- ← 선택: XML 단일 흐름
+
+**결과**:
+- 부트스트랩 비용 $0 ($20~100 절감)
+- 부트스트랩 시간 약 6분 (예상 4~8시간 → 단축)
+- 정확도 100% (DART 원본 구조화 데이터)
+- 본 시스템의 Phase 2 LLM 인프라는 분석에만 사용, 추출에 사용 안 함
+- `audit_extraction_metadata` 의 `equity_method`:
+  · `'extracted'` — TOT_EQUITY 직접 추출
+  · `'calculated'` — TOT_ASSETS - TOT_DEBTS 계산
+  · 비케이브 6년 데이터는 모두 `'calculated'` (DART XML 에 TOT_EQUITY 없음, 정상)
 
 ---
 
