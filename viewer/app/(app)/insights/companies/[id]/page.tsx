@@ -92,7 +92,7 @@ export default async function CompanyDashboardPage({ params }: PageProps) {
         <KpiCard label="영업이익" value={fmtRevenueMkrw(latestFin?.operating_income_mkrw ?? null)} />
         <KpiCard label="순이익" value={fmtRevenueMkrw(latestFin?.net_income_mkrw ?? null)} />
         <KpiCard label="총자산" value={fmtRevenueMkrw(latestFin?.total_assets_mkrw ?? null)} />
-        <KpiCard label="Brand 수" value={brands.length > 0 ? String(brands.length) : "—"} />
+        <KpiCard label="Brand 수" value={brands.total > 0 ? String(brands.total) : "—"} />
       </div>
 
       {/* 재무 차트 */}
@@ -133,15 +133,41 @@ export default async function CompanyDashboardPage({ params }: PageProps) {
         </SectionCard>
 
         {/* 산하 브랜드 */}
-        <SectionCard title="산하 Brand" meta={`${brands.length}개`} bodyClassName="p-4">
-          {brands.length === 0 ? (
+        <SectionCard
+          title="산하 Brand"
+          meta={`총 ${brands.total}개 · 무신사 ${brands.musinsa_listed}개`}
+          bodyClassName="p-4"
+        >
+          {brands.total === 0 ? (
             <p className="text-sm text-fg-quaternary px-2 py-2">브랜드 없음</p>
           ) : (
             <div className="flex flex-col gap-2">
-              {brands.map((b) => (
+              {brands.list.map((b) => (
                 <div key={b.id} className="flex items-start justify-between gap-3 px-3 py-2.5 rounded-md bg-raised border border-border-hair">
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-fg-primary truncate">{b.name}</p>
+                    <div className="flex items-center gap-2">
+                      {b.musinsa_brand_id ? (
+                        <a
+                          href={`https://www.musinsa.com/brand/${b.musinsa_brand_id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm font-medium text-fg-primary hover:text-chart-1 truncate transition-colors"
+                        >
+                          {b.name}
+                        </a>
+                      ) : (
+                        <p className="text-sm font-medium text-fg-secondary truncate">{b.name}</p>
+                      )}
+                      {b.musinsa_brand_id ? (
+                        <span className="shrink-0 text-2xs font-mono px-1 py-px rounded-sm bg-chart-1/10 text-chart-1 border border-chart-1/20">
+                          무신사
+                        </span>
+                      ) : (
+                        <span className="shrink-0 text-2xs font-mono px-1 py-px rounded-sm bg-sunken text-fg-quaternary border border-border-hair">
+                          자체몰
+                        </span>
+                      )}
+                    </div>
                     {b.description && (
                       <p className="text-xs text-fg-tertiary mt-0.5 line-clamp-1">{b.description}</p>
                     )}

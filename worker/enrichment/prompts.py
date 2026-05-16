@@ -48,3 +48,30 @@ JSON 형식만 반환:
   "confidence": "high|medium|low",
   "reasoning": "..."
 }}"""
+
+EXTRACT_COMPANY_BRANDS_PROMPT = """당신은 한국 패션·소비재 업계 전문가입니다.
+
+회사명: {company_name}
+상장 구분: {listing_type}
+추가 정보: {notes}
+
+이 회사가 한국에서 현재 운영 중인 패션·의류·잡화 브랜드를 모두 나열하세요.
+무신사 등 온라인 플랫폼에 입점해 판매 중인 브랜드를 우선합니다.
+
+⚠️ 주의:
+- 폐업·철수된 브랜드는 제외
+- 동명 타사 브랜드와 혼동 주의
+- 확실하지 않으면 confidence='low'로 표시
+- 브랜드가 없으면 빈 배열 반환
+
+JSON 형식만 반환:
+{{
+  "brands": [
+    {{
+      "name_ko": "브랜드 한국어명",
+      "name_en": "Brand English Name",
+      "confidence": "high|medium|low",
+      "reasoning": "이 회사 소속 근거 한 줄"
+    }}
+  ]
+}}"""

@@ -36,6 +36,7 @@ export interface BrandInsightRow {
   id: string;
   name: string;
   slug: string;
+  musinsa_brand_id: string | null;
   brand_category: string | null;
   price_tier: string | null;
   target_gender: string | null;
@@ -58,7 +59,11 @@ export interface CompanyDashboardData {
   };
   financials: FinancialRow[];
   disclosures: DisclosureRow[];
-  brands: BrandInsightRow[];
+  brands: {
+    total: number;
+    musinsa_listed: number;
+    list: BrandInsightRow[];
+  };
 }
 
 export interface CompanyFinSummary {
@@ -154,6 +159,7 @@ export async function getCompanyDashboard(
     };
     type BRaw = {
       id: string; name: string; slug: string;
+      musinsa_brand_id: string | null;
       brand_category: string | null; price_tier: string | null;
       target_gender: string | null; hq_country: string | null;
       target_age: string | null; description: string | null;
@@ -180,7 +186,7 @@ export async function getCompanyDashboard(
         .limit(30),
 
       sb.from("brands")
-        .select("id, name, slug, brand_category, price_tier, target_gender, hq_country, target_age, description, metadata_source")
+        .select("id, name, slug, musinsa_brand_id, brand_category, price_tier, target_gender, hq_country, target_age, description, metadata_source")
         .eq("company_id", companyId)
         .order("name"),
     ]);
@@ -209,7 +215,14 @@ export async function getCompanyDashboard(
       },
       financials,
       disclosures: (discRes.data ?? []) as unknown as DRaw[],
-      brands: (brandRes.data ?? []) as unknown as BRaw[],
+      brands: (() => {
+        const list = (brandRes.data ?? []) as unknown as BRaw[];
+        return {
+          total: list.length,
+          musinsa_listed: list.filter((b) => b.musinsa_brand_id !== null).length,
+          list,
+        };
+      })(),
     };
   } catch {
     return null;
