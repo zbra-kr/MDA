@@ -6,16 +6,18 @@
 --   (1) 자사 brand (is_own=true)
 --   (2) 98사 권한 brand (company_id NOT NULL)
 --   (3) 주요 brand: 랭킹 TOP 100 등장 이력 있음
+--       → product_snapshots.rank_main <= 100
 --   (4) 주요 brand: 스크래핑 누적 제품 10개 이상
 -- ============================================================
 
 -- ① inclusion_reason 별 분포 확인
 with rank_top100 as (
+  -- product_snapshots.rank_main 기준 (category_rankings 테이블 없음)
   select distinct b.id
-  from category_rankings cr
-  join products p on p.id = cr.product_id
+  from product_snapshots ps
+  join products p on p.id = ps.product_id
   join brands b on b.id = p.brand_id
-  where cr.rank <= 100
+  where ps.rank_main <= 100
 ),
 product_10plus as (
   select b.id
@@ -32,13 +34,13 @@ targets as (
     b.is_own,
     b.company_id,
     case
-      when b.is_own                      then '자사'
-      when b.company_id is not null      then '98사 권한'
-      when rt.id is not null             then 'TOP100 이력'
-      when p10.id is not null            then '제품 10+'
+      when b.is_own                 then '자사'
+      when b.company_id is not null then '98사 권한'
+      when rt.id is not null        then 'TOP100 이력'
+      when p10.id is not null       then '제품 10+'
     end as inclusion_reason
   from brands b
-  left join rank_top100   rt  on rt.id  = b.id
+  left join rank_top100    rt  on rt.id  = b.id
   left join product_10plus p10 on p10.id = b.id
   where b.is_own             = true
      or b.company_id is not null
@@ -62,10 +64,10 @@ order by inclusion_reason;
 -- ② 전체 대상 목록 (brand별 사유 + 현재 enrichment 상태)
 with rank_top100 as (
   select distinct b.id
-  from category_rankings cr
-  join products p on p.id = cr.product_id
+  from product_snapshots ps
+  join products p on p.id = ps.product_id
   join brands b on b.id = p.brand_id
-  where cr.rank <= 100
+  where ps.rank_main <= 100
 ),
 product_10plus as (
   select b.id, count(p.id) as product_count
@@ -79,15 +81,15 @@ select
   b.slug,
   b.name,
   b.is_own,
-  b.company_id is not null          as has_company,
-  rt.id is not null                 as top100_history,
-  coalesce(p10.product_count, 0)    as product_count,
+  b.company_id is not null       as has_company,
+  rt.id is not null              as top100_history,
+  coalesce(p10.product_count, 0) as product_count,
   case
-    when b.is_own                  then '자사'
-    when b.company_id is not null  then '98사 권한'
-    when rt.id is not null         then 'TOP100 이력'
-    else                                '제품 10+'
-  end                               as inclusion_reason,
+    when b.is_own                 then '자사'
+    when b.company_id is not null then '98사 권한'
+    when rt.id is not null        then 'TOP100 이력'
+    else                               '제품 10+'
+  end                            as inclusion_reason,
   b.brand_category,
   b.price_tier,
   b.metadata_source

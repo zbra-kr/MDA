@@ -51,10 +51,10 @@ select count(distinct b.id) as target_count
 from brands b
 left join (
   select distinct b2.id
-  from category_rankings cr
-  join products p on p.id = cr.product_id
+  from product_snapshots ps
+  join products p on p.id = ps.product_id
   join brands b2 on b2.id = p.brand_id
-  where cr.rank <= 100
+  where ps.rank_main <= 100
 ) rt on rt.id = b.id
 left join (
   select b3.id
