@@ -5,15 +5,14 @@
 
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { requireAuth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 
 export async function toggleCompetitor(
   brandId: string,
   currentValue: boolean,
 ): Promise<{ error?: string }> {
   try {
-    // viewer 이상이면 가능 — admin 불필요
-    await requireAuth();
+    await requireAdmin();
 
     const admin = supabaseAdmin();
     const { error } = await admin
