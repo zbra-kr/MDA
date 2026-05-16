@@ -183,15 +183,47 @@ export async function addCustomBrand(
   try {
     const admin = supabaseAdmin();
 
-    // slug 중복 확인
+    // slug 중복 확인 — 이미 존재하면 INSERT 대신 company_id 재매핑
     const { data: existing } = await admin
       .from("brands")
-      .select("id")
+      .select("id, slug, name, is_own, company_id")
       .eq("slug", brandSlug)
       .maybeSingle();
-    if (existing) return { error: `슬러그 '${brandSlug}' 가 이미 존재합니다.` };
 
     const companyName = await _fetchCompanyName(admin, companyId);
+
+    if (existing) {
+      const e = existing as BrandRow;
+      if (e.is_own) return { error: "자사 브랜드는 매핑을 변경할 수 없습니다." };
+      if (e.company_id === companyId) return { error: "이미 이 회사에 매핑된 브랜드입니다." };
+
+      const oldCompanyId = e.company_id;
+      const oldCompanyName = oldCompanyId ? await _fetchCompanyName(admin, oldCompanyId) : "";
+      const action = oldCompanyId ? "reassign" : "add";
+
+      const { error: updateErr } = await admin
+        .from("brands")
+        .update({ company_id: companyId, company_mapping_confidence: musinsaSlug ? "high" : "medium" })
+        .eq("id", e.id);
+      if (updateErr) return { error: updateErr.message };
+
+      await admin.from("brand_audit_log").insert({
+        brand_id: e.id,
+        brand_slug: e.slug,
+        brand_name: e.name,
+        action,
+        old_company_id: oldCompanyId ?? null,
+        old_company_name: oldCompanyName || null,
+        new_company_id: companyId,
+        new_company_name: companyName || null,
+        actor: ACTOR,
+        source: "manual_ui",
+        reasoning: reasoning || null,
+      });
+
+      revalidatePath(MANAGE_PATH);
+      return {};
+    }
 
     const { data: inserted, error: insertErr } = await admin
       .from("brands")
