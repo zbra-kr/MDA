@@ -6,6 +6,7 @@ const SUB_TABS = [
   { href: "/insights/companies", label: "회사 대시보드" },
   { href: "/insights/compare", label: "자사 vs 경쟁" },
   { href: "/insights/categories", label: "카테고리 트렌드" },
+  { href: "/insights/manage", label: "매핑 관리" },
 ] as const;
 
 export default function InsightsLayout({ children }: { children: React.ReactNode }) {

@@ -361,6 +361,128 @@ export async function getCategoryData(): Promise<BrandWithCompany[]> {
   }
 }
 
+// ─── getManageCompanies ─────────────────────────────────────────
+
+export interface ManageCompanyItem {
+  id: string;
+  name: string;
+  is_own: boolean;
+  brand_count: number;
+}
+
+export async function getManageCompanies(): Promise<ManageCompanyItem[]> {
+  try {
+    const sb = await supabaseServer();
+    type CRaw = { id: string; name: string; is_own: boolean };
+    type BRaw = { company_id: string | null };
+
+    const [compRes, brandRes] = await Promise.all([
+      sb.from("companies").select("id, name, is_own").order("name"),
+      sb.from("brands").select("company_id").not("company_id", "is", null),
+    ]);
+
+    const companies = (compRes.data ?? []) as unknown as CRaw[];
+    const brands = (brandRes.data ?? []) as unknown as BRaw[];
+
+    const countMap = new Map<string, number>();
+    for (const b of brands) {
+      if (b.company_id) countMap.set(b.company_id, (countMap.get(b.company_id) ?? 0) + 1);
+    }
+
+    const rows: ManageCompanyItem[] = companies.map((c) => ({
+      id: c.id,
+      name: c.name,
+      is_own: c.is_own,
+      brand_count: countMap.get(c.id) ?? 0,
+    }));
+
+    rows.sort((a, b) => {
+      if (a.is_own && !b.is_own) return -1;
+      if (!a.is_own && b.is_own) return 1;
+      return a.name.localeCompare(b.name, "ko");
+    });
+
+    return rows;
+  } catch {
+    return [];
+  }
+}
+
+// ─── getManageBrands ────────────────────────────────────────────
+
+export interface ManageBrandRow {
+  id: string;
+  slug: string;
+  name: string;
+  musinsa_brand_id: string | null;
+  brand_category: string | null;
+  price_tier: string | null;
+  company_mapping_confidence: string | null;
+  is_own: boolean;
+  description: string | null;
+}
+
+export async function getManageBrands(companyId: string): Promise<ManageBrandRow[]> {
+  try {
+    const sb = await supabaseServer();
+    const { data } = await sb
+      .from("brands")
+      .select("id, slug, name, musinsa_brand_id, brand_category, price_tier, company_mapping_confidence, is_own, description")
+      .eq("company_id", companyId)
+      .order("name");
+    return (data ?? []) as unknown as ManageBrandRow[];
+  } catch {
+    return [];
+  }
+}
+
+// ─── getMediumConfidenceBrands ──────────────────────────────────
+
+export interface ConflictBrandRow {
+  id: string;
+  slug: string;
+  name: string;
+  musinsa_brand_id: string | null;
+  brand_category: string | null;
+  company_mapping_confidence: string;
+  company_id: string | null;
+  company_name: string | null;
+  is_own: boolean;
+}
+
+export async function getMediumConfidenceBrands(): Promise<ConflictBrandRow[]> {
+  try {
+    const sb = await supabaseServer();
+    type BRaw = {
+      id: string; slug: string; name: string;
+      musinsa_brand_id: string | null;
+      brand_category: string | null;
+      company_mapping_confidence: string;
+      company_id: string | null;
+      is_own: boolean;
+      companies: { name: string } | null;
+    };
+    const { data } = await sb
+      .from("brands")
+      .select("id, slug, name, musinsa_brand_id, brand_category, company_mapping_confidence, company_id, is_own, companies(name)")
+      .eq("company_mapping_confidence", "medium")
+      .order("name");
+    return ((data ?? []) as unknown as BRaw[]).map((b) => ({
+      id: b.id,
+      slug: b.slug,
+      name: b.name,
+      musinsa_brand_id: b.musinsa_brand_id,
+      brand_category: b.brand_category,
+      company_mapping_confidence: b.company_mapping_confidence,
+      company_id: b.company_id,
+      company_name: b.companies?.name ?? null,
+      is_own: b.is_own,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 // ─── getInsightCompanyList ──────────────────────────────────────
 
 export interface InsightCompanyListItem {
