@@ -1,5 +1,5 @@
 "use client";
-// viewer/app/(app)/insights/companies/[id]/fin-chart.tsx
+// viewer/app/(app)/companies/[id]/fin-chart.tsx
 // 재무 시계열 라인차트 + 자산/부채/자본 영역차트 (recharts).
 
 import {

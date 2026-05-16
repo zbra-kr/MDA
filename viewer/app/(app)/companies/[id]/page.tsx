@@ -1,4 +1,4 @@
-// viewer/app/(app)/insights/companies/[id]/page.tsx
+// viewer/app/(app)/companies/[id]/page.tsx
 // 회사 상세 대시보드 — 재무 시계열 + 공시 + 브랜드 메타데이터
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -31,7 +31,6 @@ export default async function CompanyDashboardPage({ params }: PageProps) {
 
   const { company, financials, disclosures, brands } = data;
 
-  // 최근 FY 재무
   const latestFin = financials.at(-1);
   const prevFin = financials.at(-2);
 
@@ -45,7 +44,7 @@ export default async function CompanyDashboardPage({ params }: PageProps) {
     <main className="max-w-[1280px] mx-auto px-10 py-10">
       {/* 브레드크럼 */}
       <nav className="flex items-center gap-1.5 text-sm text-fg-tertiary mb-6">
-        <Link href="/insights/companies" className="hover:text-fg-primary">회사 대시보드</Link>
+        <Link href="/companies" className="hover:text-fg-primary">회사</Link>
         <span className="text-fg-quaternary">/</span>
         <span className="text-fg-secondary">{company.name}</span>
       </nav>

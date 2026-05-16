@@ -1,5 +1,6 @@
 // viewer/components/radar/companies-table.tsx
 // 패션 회사 목록 테이블. 매출/영업이익률/오늘활동 컬럼.
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { fmtRevenueMkrw } from "@/lib/format";
 import type { CompanyRow } from "@/lib/queries";
@@ -55,10 +56,10 @@ export function CompaniesTable({ rows, sort }: Props) {
 
                 {/* 회사명 */}
                 <td className="px-3">
-                  <div className="flex flex-col leading-tight">
+                  <Link href={`/companies/${r.id}`} className="flex flex-col leading-tight group">
                     <span
                       className={cn(
-                        "font-medium",
+                        "font-medium group-hover:text-chart-1 transition-colors",
                         r.is_own ? "text-house-soft" : "text-fg-primary",
                       )}
                     >
@@ -72,7 +73,7 @@ export function CompaniesTable({ rows, sort }: Props) {
                     {r.name_alt && (
                       <span className="text-xs text-fg-quaternary">{r.name_alt}</span>
                     )}
-                  </div>
+                  </Link>
                 </td>
 
                 {/* 상장구분 */}
