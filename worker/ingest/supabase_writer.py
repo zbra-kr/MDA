@@ -264,6 +264,7 @@ def ingest_ranking_items(
         if slug:
             brand_slugs.setdefault(slug, item.get("brand_name", ""))
 
+    # 랭킹 API 는 숫자 브랜드 ID 를 노출하지 않음 — slug 를 임시 대리키로 사용
     brand_payloads = [{"slug": s, "name": n, "musinsa_brand_id": s} for s, n in brand_slugs.items()]
     brand_id_map, brands_created = _upsert_brands_batch(client, brand_payloads)
     result.brands_created = brands_created

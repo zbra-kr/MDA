@@ -92,6 +92,7 @@ def classify_brand(
     brand_name: str,
     *,
     client: anthropic.Anthropic | None = None,
+    _token_acc: list[tuple[int, int]] | None = None,
 ) -> BrandMetadata | None:
     """Claude Sonnet 으로 brand 메타데이터 자동 분류.
 
@@ -118,6 +119,13 @@ def classify_brand(
                 max_tokens=_MAX_TOKENS,
                 messages=[{'role': 'user', 'content': prompt}],
             )
+            logger.bind(
+                slug=brand_slug,
+                input_tokens=msg.usage.input_tokens,
+                output_tokens=msg.usage.output_tokens,
+            ).debug('classify_brand_tokens')
+            if _token_acc is not None:
+                _token_acc.append((msg.usage.input_tokens, msg.usage.output_tokens))
             text = msg.content[0].text.strip()
 
             # JSON 블록 추출 (마크다운 펜스 있을 수 있음)

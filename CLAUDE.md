@@ -84,20 +84,27 @@ cd worker && ruff check .                      # 린트
 
 코드 변경 후에는 해당 영역의 빌드/린트/테스트를 돌려 통과를 확인한다.
 
-## 현재 상태 (v0.2.0)
+## 현재 상태 (v2.1-stage-b)
 
 - 문서·스키마·인프라 골격 완성 (v0.1.0)
 - viewer: Claude Design 핸드오프 통합, `next build` 통과, **현재 mock 데이터로 동작** (v0.2.0)
-- worker: 디렉토리·문서·`pyproject.toml`·`Dockerfile`만 존재, **코드는 아직 없음** ← 다음 작업
-- Supabase: 마이그레이션 SQL 4개 작성됨, 실제 프로젝트 적용은 사용자 확인 필요
+- worker: **Phase 1~2.1 Stage A·B 코드 완성** — scrapers, ingest, dart, enrichment, detectors (6종) 구현됨
+- Supabase: **마이그레이션 00001~00019 작성됨** — 실제 적용은 정호철이 SQL Editor 에서 수동 진행
+  - 적용 순서 참고: `00001 → 00002 → 00004 → 00003 → 00005 → ... → 00019`
+  - (00003 이 00004의 `daily_reports.stages` 컬럼에 의존, 나머지는 번호 순서대로)
+- 가동: Phase 1 자동화 검증 게이트 (5/22 예정)
+- 다음 단계: Phase 2.1 Stage C — viewer 실데이터 연동 (5/22 이후)
 
 ## 작업 우선순위 (ROADMAP Phase 1)
 
-worker 스크래퍼부터. 순서:
+완료된 순서:
 1. `worker/scrapers/base.py` — 공통 베이스 (rate limit·retry·stealth)
 2. `worker/scrapers/musinsa_ranking.py` — 첫 스크래퍼
 3. `worker/ingest/supabase_writer.py` — 적재
-4. 이후 `docs/ROADMAP.md`의 Phase 1 체크리스트 순서대로
+4. `worker/dart/` — DART 공시·재무 수집
+5. `worker/enrichment/` — 브랜드 메타데이터 LLM 분류
+6. `worker/detectors/` — 이상탐지 6종 (rank_surge, price_change, review_velocity, new_entrant, promo_start, wishlist_surge)
+7. 이후 `docs/ROADMAP.md` Phase 2+ 체크리스트 순서대로
 
 ## 하지 말 것
 

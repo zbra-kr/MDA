@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import csv
 import sys
+from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -56,8 +57,7 @@ def _fetch_targets(supabase) -> list[dict]:
         .select('brand_id')
         .execute()
     )
-    from collections import Counter
-    prod_counts: Counter = Counter(r['brand_id'] for r in (prod_resp.data or []))
+    prod_counts = Counter(r['brand_id'] for r in (prod_resp.data or []))
     prod10_ids = {bid for bid, cnt in prod_counts.items() if cnt >= 10}
 
     # brands 전체 조회
@@ -124,6 +124,7 @@ def _run_bulk(supabase, llm_client: anthropic.Anthropic) -> None:
 
     results: list[BrandMetadata] = []
     fail_slugs: list[str] = []
+    token_acc: list[tuple[int, int]] = []
 
     for i, b in enumerate(targets, 1):
         slug = b.get('slug', '')
@@ -131,7 +132,7 @@ def _run_bulk(supabase, llm_client: anthropic.Anthropic) -> None:
         bid  = b.get('id', '')
         print(f'[{i:3d}/{len(targets)}] {name} ({slug}) ...', end=' ', flush=True)
 
-        meta = classify_brand(bid, slug, name, client=llm_client)
+        meta = classify_brand(bid, slug, name, client=llm_client, _token_acc=token_acc)
         if meta is None:
             print('FAIL')
             fail_slugs.append(slug)
@@ -166,6 +167,12 @@ def _run_bulk(supabase, llm_client: anthropic.Anthropic) -> None:
         print(f'실패 slug: {fail_slugs}')
     print(f'\nCSV 저장: {_BULK_CSV_PATH}')
     print('검증 후 적재: --mode apply-from-csv --csv /tmp/brand_enrichment_verified.csv')
+
+    if token_acc:
+        total_in  = sum(t[0] for t in token_acc)
+        total_out = sum(t[1] for t in token_acc)
+        est_cost  = total_in / 1_000_000 * 3.0 + total_out / 1_000_000 * 15.0
+        print(f'[anthropic] session total: in={total_in:,}, out={total_out:,}, est_cost=${est_cost:.4f}')
 
 
 def _run_apply_high(csv_path: Path, supabase) -> None:
