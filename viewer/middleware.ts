@@ -5,16 +5,25 @@ import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
 import type { CookieOptions } from "@supabase/ssr";
 
-// 인증이 없으면 /auth/login 으로 보내는 경로 (prefix 매칭)
-const PROTECTED_PREFIXES = ["/insights/manage", "/settings"];
-// admin role 이 없으면 / 로 보내는 경로 (prefix 매칭)
-const ADMIN_PREFIXES = ["/admin"];
-// 이미 로그인된 경우 / 로 보내는 auth 경로
-const AUTH_ONLY_PATHS = [
+// 로그인 없이 접근 가능한 경로 (완전 일치)
+const PUBLIC_PATHS = new Set([
   "/auth/login",
   "/auth/signup",
   "/auth/forgot-password",
-];
+  "/auth/verified",
+]);
+// 로그인 없이 접근 가능한 경로 (prefix 매칭)
+const PUBLIC_PREFIXES = ["/auth/callback", "/auth/reset-password"];
+
+// 이미 로그인된 경우 / 로 보내는 auth 경로
+const AUTH_ONLY_PATHS = new Set([
+  "/auth/login",
+  "/auth/signup",
+  "/auth/forgot-password",
+]);
+
+// admin role 이 없으면 / 로 보내는 경로 (prefix 매칭)
+const ADMIN_PREFIXES = ["/admin"];
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
@@ -53,20 +62,29 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // ── 1. auth 전용 경로: 이미 로그인 → / 로 ──────────────────────────────
-  if (AUTH_ONLY_PATHS.includes(pathname) && user) {
-    return NextResponse.redirect(new URL("/", request.url));
+  // ── 1. 공개 prefix 경로: 세션 갱신만, 차단 없음 ──────────────────────────
+  if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) {
+    return response;
   }
 
-  // ── 2. admin 경로: 미인증 → login, non-admin → / ─────────────────────────
-  const isAdmin = ADMIN_PREFIXES.some((p) => pathname.startsWith(p));
-  if (isAdmin) {
-    if (!user) {
-      const url = new URL("/auth/login", request.url);
-      url.searchParams.set("redirect", pathname);
-      return NextResponse.redirect(url);
+  // ── 2. 공개 완전일치 경로 ───────────────────────────────────────────────
+  if (PUBLIC_PATHS.has(pathname)) {
+    // 이미 로그인됐으면 앱으로
+    if (user && AUTH_ONLY_PATHS.has(pathname)) {
+      return NextResponse.redirect(new URL("/", request.url));
     }
-    // role 확인 (DB 조회 — admin 경로에서만 수행)
+    return response;
+  }
+
+  // ── 3. 이하 모든 경로: 로그인 필수 ──────────────────────────────────────
+  if (!user) {
+    const url = new URL("/auth/login", request.url);
+    url.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(url);
+  }
+
+  // ── 4. admin 경로: admin role 확인 ───────────────────────────────────────
+  if (ADMIN_PREFIXES.some((p) => pathname.startsWith(p))) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
@@ -75,14 +93,6 @@ export async function middleware(request: NextRequest) {
     if (profile?.role !== "admin") {
       return NextResponse.redirect(new URL("/", request.url));
     }
-  }
-
-  // ── 3. 일반 보호 경로: 미인증 → login ────────────────────────────────────
-  const isProtected = PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
-  if (isProtected && !user) {
-    const url = new URL("/auth/login", request.url);
-    url.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(url);
   }
 
   return response;

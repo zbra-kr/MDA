@@ -31,7 +31,9 @@ export async function GET(request: NextRequest) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      // 이메일 인증 완료 → verified 페이지로 (next가 /이면 verified, 아니면 next 경로로)
+      const dest = next === "/" ? "/auth/verified" : next;
+      return NextResponse.redirect(`${origin}${dest}`);
     }
   }
 

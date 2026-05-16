@@ -15,12 +15,16 @@ export default async function AppLayout({
 
   let profile: Profile | null = null;
   if (user) {
-    const { data } = await sb
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-    profile = data as Profile | null;
+    try {
+      const { data } = await sb
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+      profile = data as Profile | null;
+    } catch {
+      // profiles 테이블 미존재 시 무시 (마이그레이션 00014 적용 전)
+    }
   }
 
   return (
