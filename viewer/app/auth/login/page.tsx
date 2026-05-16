@@ -3,19 +3,14 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { signIn } from "../actions";
+import { AuthLogo } from "@/components/radar/auth-logo";
 
 export default function LoginPage() {
   const [state, action, pending] = useActionState(signIn, null);
 
   return (
     <div className="w-full max-w-sm">
-      {/* 헤더 */}
-      <div className="text-center mb-8">
-        <h1 className="text-xl font-semibold text-fg-primary tracking-[-0.018em]">
-          Competitor Radar
-        </h1>
-        <p className="text-sm text-fg-tertiary mt-1">B.CAVE IT팀</p>
-      </div>
+      <AuthLogo />
 
       {/* 카드 */}
       <div className="bg-raised border border-border rounded-xl p-6">

@@ -3,18 +3,14 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { signUp } from "../actions";
+import { AuthLogo } from "@/components/radar/auth-logo";
 
 export default function SignupPage() {
   const [state, action, pending] = useActionState(signUp, null);
 
   return (
     <div className="w-full max-w-sm">
-      <div className="text-center mb-8">
-        <h1 className="text-xl font-semibold text-fg-primary tracking-[-0.018em]">
-          Competitor Radar
-        </h1>
-        <p className="text-sm text-fg-tertiary mt-1">B.CAVE IT팀</p>
-      </div>
+      <AuthLogo />
 
       <div className="bg-raised border border-border rounded-xl p-6">
         <h2 className="text-base font-medium text-fg-primary mb-5">가입</h2>

@@ -3,6 +3,7 @@
 // 이메일 인증 완료 후 표시. 3초 후 자동으로 앱으로 이동.
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { AuthLogo } from "@/components/radar/auth-logo";
 
 export default function VerifiedPage() {
   const router = useRouter();
@@ -13,12 +14,13 @@ export default function VerifiedPage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-canvas flex items-center justify-center px-4">
-      <div className="bg-raised border border-border rounded-xl p-10 w-full max-w-sm text-center">
-        <p className="text-lg font-semibold text-fg-primary mb-3">
+    <div className="w-full max-w-sm">
+      <AuthLogo />
+      <div className="bg-raised border border-border rounded-xl p-8 text-center">
+        <p className="text-base font-semibold text-fg-primary mb-2">
           이메일 인증 완료
         </p>
-        <p className="text-sm text-fg-secondary mb-8">
+        <p className="text-sm text-fg-secondary mb-8 leading-relaxed">
           B.CAVE Competitor Radar에 오신 것을 환영합니다.
           <br />
           잠시 후 메인 화면으로 이동합니다.
