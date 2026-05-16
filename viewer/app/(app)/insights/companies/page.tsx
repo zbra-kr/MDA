@@ -16,7 +16,7 @@ export default async function InsightCompaniesPage() {
           회사 대시보드
         </h1>
         <p className="text-sm text-fg-tertiary mt-1">
-          {rows.length}개 회사 · FY2024 재무 보유 {withFin.length}개 · 클릭해서 상세보기
+          {rows.length}개 회사 · 재무 보유 {withFin.length}개 · 클릭해서 상세보기
         </p>
       </div>
 
@@ -31,7 +31,7 @@ export default async function InsightCompaniesPage() {
                 구분
               </th>
               <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-fg-quaternary">
-                FY2024 매출
+                최신 매출
               </th>
               <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-fg-quaternary">
                 brand 수
@@ -60,8 +60,11 @@ export default async function InsightCompaniesPage() {
                 <td className="px-4 py-3 text-fg-tertiary">
                   {r.listing_type === "listed" ? "상장" : "비상장"}
                 </td>
-                <td className="px-4 py-3 text-right num text-fg-primary">
-                  {r.revenue_mkrw != null ? fmtRevenueMkrw(r.revenue_mkrw) : "—"}
+                <td className="px-4 py-3 text-right">
+                  <span className="num text-fg-primary">{r.revenue_mkrw != null ? fmtRevenueMkrw(r.revenue_mkrw) : "—"}</span>
+                  {r.fiscal_year_shown && (
+                    <span className="ml-1.5 text-2xs font-mono text-fg-quaternary">FY{r.fiscal_year_shown}</span>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-right num text-fg-tertiary">
                   {r.brand_count > 0 ? r.brand_count : "—"}
