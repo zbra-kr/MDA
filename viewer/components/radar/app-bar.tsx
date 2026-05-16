@@ -8,7 +8,9 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/radar/user-menu";
 
 const TABS = [
+  { href: "/", label: "홈", key: "home" },
   { href: "/reports/today", label: "대시보드", key: "dashboard" },
+  { href: "/own", label: "자사", key: "own" },
   { href: "/anomalies", label: "이상 징후", key: "anomalies" },
   { href: "/products/today", label: "상품", key: "products" },
   { href: "/brands", label: "브랜드", key: "brands" },

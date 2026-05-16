@@ -5,6 +5,7 @@ import Link from "next/link";
 const SUB_TABS = [
   { href: "/insights/compare", label: "자사 vs 경쟁" },
   { href: "/insights/categories", label: "카테고리 트렌드" },
+  { href: "/insights/status", label: "매핑 상태" },
   { href: "/insights/manage", label: "매핑 관리" },
 ] as const;
 
