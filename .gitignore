@@ -60,3 +60,5 @@ supabase/.temp/
 *.zip
 *.tar.gz
 viewer/MDA-handoff-original.zip
+docs_cache/
+*.stub.bak
