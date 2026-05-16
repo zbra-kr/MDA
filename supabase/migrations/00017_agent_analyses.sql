@@ -1,14 +1,18 @@
 -- ============================================================
 -- B.CAVE Competitor Radar — agent_analyses (Phase 2.1 단계 A)
--- Version: 1.0  Date: 2026-05-17
+-- Version: 1.1  Date: 2026-05-17
 -- 적용 순서: 00016 이후 (anomalies 테이블 참조)
 --
 -- ⚠️  자동 적용 금지 — 정호철이 Supabase SQL Editor에서 적용.
 -- ============================================================
 
+-- 이전 시도 잔여물 제거 (feedback → analyses 순서로 drop)
+drop table if exists public.agent_analyses_feedback cascade;
+drop table if exists public.agent_analyses cascade;
+
 -- ─── agent_analyses ───────────────────────────────────────────────────────
 
-create table if not exists public.agent_analyses (
+create table public.agent_analyses (
   id                      uuid primary key default gen_random_uuid(),
   anomaly_id              uuid not null references public.anomalies(id),
   model_version           text not null,
@@ -25,7 +29,7 @@ comment on table public.agent_analyses is 'LLM 분석 결과. anomaly_id → ano
 
 -- ─── agent_analyses_feedback ──────────────────────────────────────────────
 
-create table if not exists public.agent_analyses_feedback (
+create table public.agent_analyses_feedback (
   id          uuid primary key default gen_random_uuid(),
   analysis_id uuid not null references public.agent_analyses(id),
   actor       text not null,
