@@ -49,7 +49,7 @@ class OllamaClient(LLMClient):
         self,
         system: str,
         user: str,
-        model: str = "gemma:e4b",
+        model: str = "gemma4:e4b",
         timeout: float = 60.0,
     ) -> str | None:
         for attempt in range(2):
@@ -85,7 +85,7 @@ class OllamaClient(LLMClient):
         self,
         system: str,
         user: str,
-        model: str = "gemma:e4b",
+        model: str = "gemma4:e4b",
         timeout: float = 60.0,
     ) -> tuple[str | None, int, int, int]:
         """(content, tokens_in, tokens_out, latency_ms) 반환."""

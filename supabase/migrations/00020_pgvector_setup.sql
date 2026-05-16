@@ -1,6 +1,6 @@
 -- ============================================================
 -- B.CAVE Competitor Radar — own_skus + product_matches (Phase 2.1 단계 C)
--- Version: 1.1  Date: 2026-05-17
+-- Version: 1.2  Date: 2026-05-17
 -- 적용 순서: 00019 이후
 --
 -- ⚠️  자동 적용 금지 — 정호철이 Supabase SQL Editor에서 적용.
@@ -27,12 +27,12 @@ create table public.own_skus (
   price        integer,
   source       text not null default 'snowflake',
   pulled_at    timestamptz not null default now(),
-  embedding    vector(1024),  -- ⚠️ gemma:e4b 실제 출력 차원과 맞춰야 함 (ollama embeddings 확인 후 조정)
+  embedding    vector(768),   -- embeddinggemma:300m 출력 차원 (768차원 확정)
   unique(brand_slug, sku_code)
 );
 
 comment on table public.own_skus is
-  '자사 SKU 마스터 (Snowflake 풀). embedding: bge-m3 1024차원. Phase 2.1 단계 C.';
+  '자사 SKU 마스터 (Snowflake 풀). embedding: embeddinggemma:300m 768차원. Phase 2.1 단계 C.';
 
 create index if not exists own_skus_brand_idx
   on public.own_skus (brand_slug);

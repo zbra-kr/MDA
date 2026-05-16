@@ -21,7 +21,7 @@ from worker.agent.prompts import PROMPT_VERSION, SYSTEM_PROMPT, build_user_promp
 from worker.agent.validators import validate_output
 
 DAILY_LIMIT  = 50   # 일 최대 분석 건수 (severity 내림차순)
-LLM_MODEL    = os.environ.get("OLLAMA_MODEL", "gemma:e4b")
+LLM_MODEL    = os.environ.get("OLLAMA_MODEL", "gemma4:e4b")
 MAX_RETRIES  = 2    # JSON 파싱 실패 시 재시도 횟수 (hint 추가)
 
 

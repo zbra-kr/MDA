@@ -37,7 +37,7 @@ dependencies = [
   "pdf2image>=1.17",
 
   # LLM
-  "ollama>=0.3",
+  "ollama>=0.4",                   # client.embed() 지원 (embeddinggemma:300m)
   "openai>=1.50",                  # Ollama OpenAI 호환 클라이언트로 사용
 
   # Publishing
