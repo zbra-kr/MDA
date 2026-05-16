@@ -27,7 +27,7 @@ create table public.own_skus (
   price        integer,
   source       text not null default 'snowflake',
   pulled_at    timestamptz not null default now(),
-  embedding    vector(1024),
+  embedding    vector(1024),  -- ⚠️ gemma:e4b 실제 출력 차원과 맞춰야 함 (ollama embeddings 확인 후 조정)
   unique(brand_slug, sku_code)
 );
 

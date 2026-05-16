@@ -8,7 +8,7 @@ LLM 클라이언트 추상화 (Phase 2.1 단계 E-1).
 사용:
     from worker.agent.llm_client import OllamaClient
     client = OllamaClient()
-    result = await client.complete(system="...", user="...", model="qwen2.5:14b")
+    result = await client.complete(system="...", user="...", model="gemma:e4b")
 """
 
 from __future__ import annotations
@@ -49,7 +49,7 @@ class OllamaClient(LLMClient):
         self,
         system: str,
         user: str,
-        model: str = "qwen2.5:14b",
+        model: str = "gemma:e4b",
         timeout: float = 60.0,
     ) -> str | None:
         for attempt in range(2):
@@ -85,7 +85,7 @@ class OllamaClient(LLMClient):
         self,
         system: str,
         user: str,
-        model: str = "qwen2.5:14b",
+        model: str = "gemma:e4b",
         timeout: float = 60.0,
     ) -> tuple[str | None, int, int, int]:
         """(content, tokens_in, tokens_out, latency_ms) 반환."""

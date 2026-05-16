@@ -2,14 +2,11 @@
 Snowflake → own_skus 풀러 (Phase 2.1 단계 C-2).
 
 커버낫(covernat)·리(lee)·와키윌리(wakywilly) 3개 브랜드 SKU를
-BCAVE.SEWON.V_PRODUCT_DAILY_SNAPSHOT 뷰에서 읽어 own_skus 테이블에 적재.
+BCAVE.SEWON.SW_STYLEINFO 테이블에서 읽어 own_skus 테이블에 적재.
 
 사용법:
     python -m worker.matchers.snowflake_pull --brands covernat,lee,wakywilly
     python -m worker.matchers.snowflake_pull --brands covernat,lee,wakywilly --dry-run
-
-컬럼명 확인: 이슬비·은상이와 확인 후 SNOWFLAKE_COLUMNS 상수를 업데이트.
-현재 가정 컬럼: sku_code, product_name, category, msrp_price (brand_slug는 --brands 매핑).
 """
 
 from __future__ import annotations
@@ -26,24 +23,21 @@ from supabase import Client
 
 # ─── 설정 상수 ──────────────────────────────────────────────────────────────
 
-SNOWFLAKE_VIEW = "BCAVE.SEWON.V_PRODUCT_DAILY_SNAPSHOT"
+SNOWFLAKE_TABLE = "BCAVE.SEWON.SW_STYLEINFO"
 
-# ⚠️ 실제 컬럼명은 이슬비·은상이와 확인 후 업데이트.
-# 현재는 설계 문서 3.1절 기준 추정값.
 SNOWFLAKE_COLUMNS = {
-    "sku_code":     "SKU_CODE",       # 자사 SKU 코드
-    "product_name": "PRODUCT_NAME",   # 상품명
-    "category":     "CATEGORY",       # 카테고리
-    "price":        "MSRP_PRICE",     # 정상가 (원)
-    "brand_slug":   "BRAND_CODE",     # 브랜드 코드 → slug 매핑
+    "sku_code":     "STYLECD",   # 자사 SKU 코드
+    "product_name": "STYLENM",   # 상품명
+    "brand_code":   "BRANDCD",   # 브랜드 코드 → slug 매핑
+    "category":     "ITEMNM",    # 카테고리
+    "price":        "TAGPRICE",  # 정상가 (원)
 }
 
-# Snowflake brand_code → own_skus.brand_slug 매핑
-# ⚠️ 실제 BRAND_CODE 값은 Snowflake 확인 후 업데이트.
+# Snowflake BRANDCD → own_skus.brand_slug 매핑
 BRAND_CODE_TO_SLUG: dict[str, str] = {
-    "COVERNAT":   "covernat",
-    "LEE":        "lee",
-    "WAKYWILLY":  "wakywilly",
+    "CO": "covernat",   # 5,975 SKU
+    "LE": "lee",        # 2,883 SKU
+    "WA": "wakywilly",  # 3,901 SKU
 }
 
 # slug → Snowflake brand_code 역매핑
@@ -85,13 +79,13 @@ def pull_skus(brands: list[str]) -> list[dict]:
 
     sql = f"""
         SELECT
-            {c['brand_slug']}  AS brand_code,
-            {c['sku_code']}    AS sku_code,
+            {c['brand_code']}   AS brand_code,
+            {c['sku_code']}     AS sku_code,
             {c['product_name']} AS product_name,
-            {c['category']}    AS category,
-            {c['price']}       AS price
-        FROM {SNOWFLAKE_VIEW}
-        WHERE {c['brand_slug']} IN ({placeholders})
+            {c['category']}     AS category,
+            {c['price']}        AS price
+        FROM {SNOWFLAKE_TABLE}
+        WHERE {c['brand_code']} IN ({placeholders})
     """
 
     conn = _snowflake_conn()

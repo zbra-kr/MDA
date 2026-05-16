@@ -1,7 +1,7 @@
 """
 own_skus 임베딩 생성기 (Phase 2.1 단계 C-3).
 
-Ollama bge-m3 (1024차원)으로 own_skus.product_name + category 임베딩 생성 →
+Ollama gemma:e4b으로 own_skus.product_name + category 임베딩 생성 →
 own_skus.embedding 컬럼 UPDATE.
 
 사용법:
@@ -9,8 +9,8 @@ own_skus.embedding 컬럼 UPDATE.
     python -m worker.matchers.embedder --batch 100 --force  # 기존 임베딩 덮어쓰기
 
 선행 조건:
-    ollama pull bge-m3   # Mac 또는 GPU 서버에서 사전 실행 필요
-    ollama serve         # Ollama 서버 가동 중
+    ollama pull gemma:e4b   # Mac에서 사전 실행 필요
+    ollama serve            # Ollama 서버 가동 중
 """
 
 from __future__ import annotations
@@ -25,8 +25,8 @@ import ollama
 from loguru import logger
 from supabase import Client
 
-EMBED_MODEL = "bge-m3"
-EMBED_DIM   = 1024
+EMBED_MODEL = "gemma:e4b"
+EMBED_DIM: int | None = None  # None = 차원 검증 생략 (pgvector가 스키마 차원으로 검증)
 
 
 # ─── 임베딩 생성 ─────────────────────────────────────────────────────────────
@@ -38,7 +38,7 @@ def _build_text(product_name: str | None, category: str | None) -> str:
 
 
 def embed_text(text: str, ollama_host: str | None = None) -> list[float] | None:
-    """Ollama bge-m3로 텍스트 임베딩. 실패 시 None 반환."""
+    """Ollama gemma:e4b로 텍스트 임베딩. 실패 시 None 반환."""
     if not text.strip():
         return None
     try:
@@ -48,7 +48,7 @@ def embed_text(text: str, ollama_host: str | None = None) -> list[float] | None:
         client = ollama.Client(**client_kwargs)
         resp = client.embeddings(model=EMBED_MODEL, prompt=text)
         emb = resp["embedding"]
-        if len(emb) != EMBED_DIM:
+        if EMBED_DIM is not None and len(emb) != EMBED_DIM:
             logger.warning(f"embedding dim mismatch: expected {EMBED_DIM}, got {len(emb)}")
             return None
         return emb
@@ -167,7 +167,7 @@ def main() -> None:
     print(f"{bar}\n")
 
     if stats["failed"] > 0:
-        print("[WARN] 실패 건 있음 — ollama pull bge-m3 또는 ollama serve 확인")
+        print("[WARN] 실패 건 있음 — ollama pull gemma:e4b 또는 ollama serve 확인")
         sys.exit(1)
 
 

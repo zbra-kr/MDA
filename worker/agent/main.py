@@ -62,7 +62,7 @@ def _parse_args() -> argparse.Namespace:
         "--model",
         default=None,
         metavar="MODEL",
-        help="사용 모델 (기본: OLLAMA_MODEL 환경변수 또는 qwen2.5:14b)",
+        help="사용 모델 (기본: OLLAMA_MODEL 환경변수 또는 gemma:e4b)",
     )
     p.add_argument("--dry-run", action="store_true", help="DB 쓰기 생략")
     return p.parse_args()
