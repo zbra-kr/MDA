@@ -3,8 +3,9 @@
 // 이상탐지 목록 클라이언트 인터랙션: 필터·시계열 차트·카드 그리드·상세 모달
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { X, ExternalLink, TrendingUp, DollarSign, Star, Zap, Tag, Heart } from "lucide-react";
+import { X, ExternalLink, TrendingUp, DollarSign, Star, Zap, Tag, Heart, LayoutList } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type {
   AnomalyRow,
@@ -218,14 +219,35 @@ function AnomalyModal({
             </span>
           </div>
 
-          {/* 상세 페이지 링크 */}
-          <a
-            href={`/anomalies/${anomaly.id}`}
-            className="flex items-center gap-1.5 text-sm text-fg-tertiary hover:text-fg-primary transition-colors"
-          >
-            <ExternalLink size={13} />
-            상세 분석 보기
-          </a>
+          {/* 연관 페이지 링크 */}
+          <div className="flex flex-col gap-2 pt-1 border-t border-border-hair">
+            <a
+              href={`/anomalies/${anomaly.id}`}
+              className="flex items-center gap-1.5 text-sm text-fg-tertiary hover:text-fg-primary transition-colors"
+            >
+              <ExternalLink size={13} />
+              상세 분석 보기
+            </a>
+            {anomaly.brand_slug && (
+              <>
+                <Link
+                  href={`/products/today?brand=${encodeURIComponent(anomaly.brand_slug)}`}
+                  onClick={() => {}}
+                  className="flex items-center gap-1.5 text-sm text-fg-tertiary hover:text-fg-primary transition-colors"
+                >
+                  <LayoutList size={13} />
+                  랭킹에서 {anomaly.brand_name} 보기
+                </Link>
+                <Link
+                  href={`/brands?slug=${encodeURIComponent(anomaly.brand_slug)}`}
+                  className="flex items-center gap-1.5 text-sm text-fg-tertiary hover:text-fg-primary transition-colors"
+                >
+                  <TrendingUp size={13} />
+                  브랜드 정보
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>

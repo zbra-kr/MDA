@@ -7,9 +7,10 @@ interface Props {
   currentDate: string;
   maxDate: string;
   category?: string;
+  brand?: string;
 }
 
-export function RankingDatePicker({ currentDate, maxDate, category }: Props) {
+export function RankingDatePicker({ currentDate, maxDate, category, brand }: Props) {
   const router = useRouter();
 
   function onChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -17,6 +18,7 @@ export function RankingDatePicker({ currentDate, maxDate, category }: Props) {
     if (!d) return;
     const p = new URLSearchParams();
     if (category) p.set("category", category);
+    if (brand) p.set("brand", brand);
     if (d !== maxDate) p.set("date", d);
     const qs = p.toString();
     router.push(`/products/today${qs ? `?${qs}` : ""}`);

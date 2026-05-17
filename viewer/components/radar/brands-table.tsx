@@ -1,5 +1,6 @@
 // viewer/components/radar/brands-table.tsx
 // 브랜드 목록 테이블. CompetitorToggle 을 포함하는 Server Component.
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { BrandRow } from "@/lib/queries";
 import { CompetitorToggle } from "@/components/radar/competitor-toggle";
@@ -43,12 +44,15 @@ export function BrandsTable({ rows }: Props) {
                   : "hover:bg-hover",
               )}
             >
-              {/* 브랜드명 */}
+              {/* 브랜드명 → 랭킹 필터 */}
               <td className="px-3">
-                <div className="flex flex-col leading-tight">
+                <Link
+                  href={`/products/today?brand=${encodeURIComponent(r.slug)}`}
+                  className="flex flex-col leading-tight group"
+                >
                   <span
                     className={cn(
-                      "font-medium",
+                      "font-medium group-hover:underline underline-offset-2",
                       r.is_own ? "text-house-soft" : "text-fg-primary",
                     )}
                   >
@@ -60,12 +64,21 @@ export function BrandsTable({ rows }: Props) {
                     )}
                   </span>
                   <span className="text-xs text-fg-quaternary font-mono">{r.slug}</span>
-                </div>
+                </Link>
               </td>
 
-              {/* 소속 회사 */}
-              <td className="px-2 text-sm text-fg-secondary">
-                {r.company_name ?? <span className="text-fg-quaternary">—</span>}
+              {/* 소속 회사 → 회사 페이지 */}
+              <td className="px-2 text-sm">
+                {r.company_id && r.company_name ? (
+                  <Link
+                    href={`/companies/${r.company_id}`}
+                    className="text-fg-secondary hover:text-fg-primary hover:underline underline-offset-2 transition-colors"
+                  >
+                    {r.company_name}
+                  </Link>
+                ) : (
+                  <span className="text-fg-quaternary">—</span>
+                )}
               </td>
 
               {/* 매핑 confidence */}
@@ -84,10 +97,15 @@ export function BrandsTable({ rows }: Props) {
                 )}
               </td>
 
-              {/* 오늘 상품 수 */}
+              {/* 오늘 상품 수 → 랭킹 링크 */}
               <td className="px-2 text-right">
                 {r.today_products > 0 ? (
-                  <span className="num font-medium text-fg-primary">{r.today_products}</span>
+                  <Link
+                    href={`/products/today?brand=${encodeURIComponent(r.slug)}`}
+                    className="num font-medium text-fg-primary hover:text-chart-1 hover:underline underline-offset-2 transition-colors"
+                  >
+                    {r.today_products}
+                  </Link>
                 ) : (
                   <span className="num text-fg-quaternary">—</span>
                 )}

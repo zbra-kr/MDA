@@ -323,6 +323,7 @@ export interface ProductTodayRow {
   product_name: string;
   product_url: string;
   brand_name: string;
+  brand_slug: string | null;
   company_name: string | null;
   rank_main: number | null;
   current_price: number;
@@ -335,18 +336,19 @@ export interface ProductTodayRow {
 
 export async function getProductsToday(opts: {
   category_code?: string;
+  brand_slug?: string;
   date?: string; // YYYY-MM-DD; 생략 시 오늘 KST
   limit?: number;
   offset?: number;
 }): Promise<{ rows: ProductTodayRow[]; total: number }> {
   if (USE_MOCK) return { rows: [], total: 0 };
-  const { category_code, limit = 50, offset = 0 } = opts;
+  const { category_code, brand_slug, limit = 50, offset = 0 } = opts;
   try {
     const sb = await supabaseServer();
     const todayKST = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
     const today = opts.date ?? todayKST;
 
-    // 카테고리 코드 → id 변환 (필요한 경우만)
+    // 카테고리 코드 → id 변환
     let categoryId: string | null = null;
     if (category_code) {
       const { data: catRow } = await sb
@@ -355,6 +357,17 @@ export async function getProductsToday(opts: {
         .eq("musinsa_code", category_code)
         .maybeSingle();
       categoryId = (catRow as unknown as { id: string } | null)?.id ?? null;
+    }
+
+    // 브랜드 slug → id 변환
+    let brandId: string | null = null;
+    if (brand_slug) {
+      const { data: bRow } = await sb
+        .from("brands")
+        .select("id")
+        .eq("slug", brand_slug)
+        .maybeSingle();
+      brandId = (bRow as unknown as { id: string } | null)?.id ?? null;
     }
 
     type RawRow = {
@@ -371,7 +384,7 @@ export async function getProductsToday(opts: {
         category_id: string | null;
         thumbnail_url: string | null;
         main_image_url: string | null;
-        brands: { name: string; companies: { name: string } | null } | null;
+        brands: { name: string; slug: string; companies: { name: string } | null } | null;
         categories: { name_kr: string } | null;
         product_images: Array<{ cdn_url: string | null; image_type: string | null; order_idx: number }>;
       } | null;
@@ -393,7 +406,7 @@ export async function getProductsToday(opts: {
            category_id,
            thumbnail_url,
            main_image_url,
-           brands!inner ( name, companies ( name ) ),
+           brands!inner ( name, slug, companies ( name ) ),
            categories ( name_kr ),
            product_images ( cdn_url, image_type, order_idx )
          )`,
@@ -406,6 +419,9 @@ export async function getProductsToday(opts: {
 
     if (categoryId) {
       query = query.eq("products.category_id", categoryId);
+    }
+    if (brandId) {
+      query = query.eq("products.brand_id", brandId);
     }
 
     const { data: rawData, count } = await query;
@@ -427,6 +443,7 @@ export async function getProductsToday(opts: {
         product_name: prod?.name ?? "",
         product_url: prod?.url ?? "",
         brand_name: brand?.name ?? "",
+        brand_slug: brand?.slug ?? null,
         company_name: brand?.companies?.name ?? null,
         rank_main: r.rank_main,
         current_price: r.current_price,
@@ -564,6 +581,7 @@ export interface BrandRow {
   slug: string;
   is_competitor: boolean;
   is_own: boolean;
+  company_id: string | null;
   company_name: string | null;
   company_mapping_confidence: string | null;
   created_at: string;
@@ -599,9 +617,10 @@ export async function getBrands(opts: {
     type BRaw = {
       id: string; name: string; slug: string;
       is_competitor: boolean; is_own: boolean;
+      company_id: string | null;
       company_mapping_confidence: string | null;
       created_at: string;
-      companies: { name: string } | null;
+      companies: { id: string; name: string } | null;
     };
     type SnapRaw = {
       products: { brand_id: string; categories: { name_kr: string } | null } | null;
@@ -610,7 +629,7 @@ export async function getBrands(opts: {
     // 브랜드 전체 + 회사 조인, 오늘 스냅샷 병렬 조회
     const [brandsRes, snapsRes] = await Promise.all([
       sb.from("brands").select(
-        "id, name, slug, is_competitor, is_own, company_mapping_confidence, created_at, companies(name)"
+        "id, name, slug, is_competitor, is_own, company_id, company_mapping_confidence, created_at, companies(id, name)"
       ),
       sb.from("product_snapshots")
         .select("products!inner(brand_id, categories(name_kr))")
@@ -641,6 +660,7 @@ export async function getBrands(opts: {
         slug: b.slug,
         is_competitor: b.is_competitor,
         is_own: b.is_own,
+        company_id: b.companies?.id ?? b.company_id ?? null,
         company_name: b.companies?.name ?? null,
         company_mapping_confidence: b.company_mapping_confidence,
         created_at: b.created_at,

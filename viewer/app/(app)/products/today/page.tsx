@@ -1,6 +1,6 @@
 // viewer/app/(app)/products/today/page.tsx
-// 상품 랭킹 — 날짜 선택 + 카테고리 필터 + 페이지네이션
-import { ChevronLeft, ChevronRight } from "lucide-react";
+// 상품 랭킹 — 날짜·브랜드·카테고리 필터 + 페이지네이션
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import Link from "next/link";
 import { getProductsToday, getActiveCategories } from "@/lib/queries";
 import { fmtDate } from "@/lib/format";
@@ -12,11 +12,11 @@ import { SectionCard } from "@/components/radar/section-card";
 const PAGE_SIZE = 50;
 
 interface PageProps {
-  searchParams: Promise<{ category?: string; page?: string; date?: string }>;
+  searchParams: Promise<{ category?: string; page?: string; date?: string; brand?: string }>;
 }
 
 export default async function ProductsTodayPage({ searchParams }: PageProps) {
-  const { category, page, date } = await searchParams;
+  const { category, page, date, brand } = await searchParams;
   const pageNum = Math.max(1, Number(page ?? 1));
   const offset = (pageNum - 1) * PAGE_SIZE;
 
@@ -25,7 +25,13 @@ export default async function ProductsTodayPage({ searchParams }: PageProps) {
 
   const [categories, { rows, total }] = await Promise.all([
     getActiveCategories(),
-    getProductsToday({ category_code: category, date: targetDate, limit: PAGE_SIZE, offset }),
+    getProductsToday({
+      category_code: category,
+      brand_slug: brand,
+      date: targetDate,
+      limit: PAGE_SIZE,
+      offset,
+    }),
   ]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -56,10 +62,27 @@ export default async function ProductsTodayPage({ searchParams }: PageProps) {
             currentDate={targetDate}
             maxDate={todayKST}
             category={category}
+            brand={brand}
           />
           <CategoryFilter categories={categories} current={category} />
         </div>
       </div>
+
+      {/* 브랜드 필터 활성 표시 */}
+      {brand && (
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-xs text-fg-tertiary">브랜드 필터:</span>
+          <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-selected border border-border text-sm font-medium text-fg-primary">
+            {brand}
+            <Link
+              href={buildHref(category, 1, targetDate, todayKST, undefined)}
+              className="text-fg-quaternary hover:text-fg-primary transition-colors"
+            >
+              <X size={12} />
+            </Link>
+          </span>
+        </div>
+      )}
 
       {/* 테이블 */}
       <SectionCard
@@ -78,13 +101,11 @@ export default async function ProductsTodayPage({ searchParams }: PageProps) {
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-3 mt-6">
           {pageNum > 1 ? (
-            <PageLink href={buildHref(category, pageNum - 1, targetDate, todayKST)}>
+            <PageLink href={buildHref(category, pageNum - 1, targetDate, todayKST, brand)}>
               <ChevronLeft size={14} />
             </PageLink>
           ) : (
-            <PageLinkDisabled>
-              <ChevronLeft size={14} />
-            </PageLinkDisabled>
+            <PageLinkDisabled><ChevronLeft size={14} /></PageLinkDisabled>
           )}
 
           <span className="text-sm text-fg-secondary num">
@@ -92,13 +113,11 @@ export default async function ProductsTodayPage({ searchParams }: PageProps) {
           </span>
 
           {pageNum < totalPages ? (
-            <PageLink href={buildHref(category, pageNum + 1, targetDate, todayKST)}>
+            <PageLink href={buildHref(category, pageNum + 1, targetDate, todayKST, brand)}>
               <ChevronRight size={14} />
             </PageLink>
           ) : (
-            <PageLinkDisabled>
-              <ChevronRight size={14} />
-            </PageLinkDisabled>
+            <PageLinkDisabled><ChevronRight size={14} /></PageLinkDisabled>
           )}
         </div>
       )}
@@ -111,9 +130,11 @@ function buildHref(
   page: number,
   date: string,
   todayKST: string,
+  brand?: string,
 ): string {
   const params = new URLSearchParams();
   if (category) params.set("category", category);
+  if (brand) params.set("brand", brand);
   if (date !== todayKST) params.set("date", date);
   if (page > 1) params.set("page", String(page));
   const qs = params.toString();

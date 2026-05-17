@@ -4,7 +4,8 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { ExternalLink, X } from "lucide-react";
+import Link from "next/link";
+import { ExternalLink, X, TrendingUp, LayoutList } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fmtKRW } from "@/lib/format";
 import type { ProductTodayRow } from "@/lib/queries";
@@ -149,6 +150,7 @@ function ProductDetailModal({
   product: ProductTodayRow;
   onClose: () => void;
 }) {
+  // brand_slug가 있으면 이상탐지·브랜드 링크 표시
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]"
@@ -226,8 +228,30 @@ function ProductDetailModal({
           <StatItem label="재고" value={p.is_sold_out ? "품절" : "판매 중"} />
         </div>
 
-        {/* 무신사 링크 */}
-        <div className="px-5 pb-5">
+        {/* 액션 버튼 */}
+        <div className="px-5 pb-5 flex flex-col gap-2">
+          {/* 연관 링크 */}
+          {p.brand_slug && (
+            <div className="flex gap-2">
+              <Link
+                href={`/trends?brand=${encodeURIComponent(p.brand_slug)}`}
+                onClick={onClose}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 rounded-md border border-border text-xs text-fg-secondary hover:text-fg-primary hover:border-border-strong transition-colors"
+              >
+                <TrendingUp size={11} />
+                이상탐지 내역
+              </Link>
+              <Link
+                href={`/brands?slug=${encodeURIComponent(p.brand_slug)}`}
+                onClick={onClose}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 rounded-md border border-border text-xs text-fg-secondary hover:text-fg-primary hover:border-border-strong transition-colors"
+              >
+                <LayoutList size={11} />
+                브랜드 정보
+              </Link>
+            </div>
+          )}
+          {/* 무신사 링크 */}
           <a
             href={p.product_url}
             target="_blank"
