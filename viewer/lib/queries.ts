@@ -335,6 +335,7 @@ export interface ProductTodayRow {
 
 export async function getProductsToday(opts: {
   category_code?: string;
+  date?: string; // YYYY-MM-DD; 생략 시 오늘 KST
   limit?: number;
   offset?: number;
 }): Promise<{ rows: ProductTodayRow[]; total: number }> {
@@ -342,7 +343,8 @@ export async function getProductsToday(opts: {
   const { category_code, limit = 50, offset = 0 } = opts;
   try {
     const sb = await supabaseServer();
-    const today = new Date().toISOString().slice(0, 10);
+    const todayKST = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
+    const today = opts.date ?? todayKST;
 
     // 카테고리 코드 → id 변환 (필요한 경우만)
     let categoryId: string | null = null;
