@@ -122,7 +122,6 @@ export async function getAnomalies(filter: AnomalyFilter = {}): Promise<AnomalyR
       evidence: Record<string, unknown>;
       products: {
         name: string | null;
-        current_price: number | null;
         thumbnail_url: string | null;
         brands: { name: string | null; slug: string | null } | null;
       } | null;
@@ -132,7 +131,7 @@ export async function getAnomalies(filter: AnomalyFilter = {}): Promise<AnomalyR
       .from("anomalies")
       .select(
         "id, product_id, anomaly_type, severity, detected_on, analyzed, evidence, " +
-        "products(name, current_price, thumbnail_url, brands(name, slug))",
+        "products(name, thumbnail_url, brands(name, slug))",
       )
       .order("severity", { ascending: false });
 
@@ -143,7 +142,8 @@ export async function getAnomalies(filter: AnomalyFilter = {}): Promise<AnomalyR
     if (filter.date_to)   q = q.lte("detected_on", filter.date_to);
     q = q.limit(filter.limit ?? 200);
 
-    const { data } = await q;
+    const { data, error } = await q;
+    if (error) console.error("[getAnomalies] error:", error.code, error.message);
     const rows = (data ?? []) as unknown as RawAnomaly[];
 
     const result = rows.map((r) => ({
@@ -155,7 +155,7 @@ export async function getAnomalies(filter: AnomalyFilter = {}): Promise<AnomalyR
       analyzed:              r.analyzed,
       evidence:              r.evidence ?? {},
       product_name:          r.products?.name ?? null,
-      product_current_price: r.products?.current_price ?? null,
+      product_current_price: null, // products 테이블에 없음 — product_snapshots에 있음
       product_thumbnail_url: r.products?.thumbnail_url ?? null,
       brand_name:            r.products?.brands?.name ?? null,
       brand_slug:            r.products?.brands?.slug ?? null,
@@ -188,24 +188,23 @@ export async function getAnomalyDetail(anomalyId: string): Promise<AnomalyDetail
       evidence: Record<string, unknown>;
       products: {
         name: string | null;
-        current_price: number | null;
         list_price: number | null;
-        review_count: number | null;
         musinsa_no: number | null;
         thumbnail_url: string | null;
         brands: { name: string | null; slug: string | null } | null;
       } | null;
     };
 
-    const { data: raw } = await sb
+    const { data: raw, error: rawError } = await sb
       .from("anomalies")
       .select(
         "id, product_id, anomaly_type, severity, detected_on, analyzed, evidence, " +
-        "products(name, current_price, list_price, review_count, musinsa_no, thumbnail_url, brands(name, slug))",
+        "products(name, list_price, musinsa_no, thumbnail_url, brands(name, slug))",
       )
       .eq("id", anomalyId)
       .maybeSingle();
 
+    if (rawError) console.error("[getAnomalyDetail] error:", rawError.code, rawError.message);
     if (!raw) return null;
     const r = raw as unknown as RawDetail;
 
@@ -231,10 +230,10 @@ export async function getAnomalyDetail(anomalyId: string): Promise<AnomalyDetail
       analyzed:              r.analyzed,
       evidence:              r.evidence ?? {},
       product_name:          r.products?.name ?? null,
-      product_current_price: r.products?.current_price ?? null,
+      product_current_price: null, // products 테이블에 없음 — product_snapshots에 있음
       product_thumbnail_url: r.products?.thumbnail_url ?? null,
       product_list_price:    r.products?.list_price ?? null,
-      product_review_count:  r.products?.review_count ?? null,
+      product_review_count:  null, // products 테이블에 없음 — product_snapshots에 있음
       product_musinsa_no:    msNo ?? null,
       product_url:           msNo ? `https://www.musinsa.com/products/${msNo}` : null,
       brand_name:            r.products?.brands?.name ?? null,
@@ -350,7 +349,6 @@ export async function getMatchDetail(matchId: string): Promise<MatchDetailRow | 
       } | null;
       products: {
         name: string | null;
-        current_price: number | null;
         brands: { name: string | null; slug: string | null } | null;
       } | null;
     };
@@ -361,7 +359,7 @@ export async function getMatchDetail(matchId: string): Promise<MatchDetailRow | 
         "id, competitor_product_id, own_sku_id, similarity_score, match_method, " +
         "diff_summary, detected_at, " +
         "own_skus(sku_code, product_name, price, brand_slug), " +
-        "products!competitor_product_id(name, current_price, brands(name, slug))",
+        "products!competitor_product_id(name, brands(name, slug))",
       )
       .eq("id", matchId)
       .maybeSingle();
@@ -382,7 +380,7 @@ export async function getMatchDetail(matchId: string): Promise<MatchDetailRow | 
       own_sku_price:            r.own_skus?.price ?? null,
       own_brand_slug:           r.own_skus?.brand_slug ?? null,
       competitor_product_name:  r.products?.name ?? null,
-      competitor_product_price: r.products?.current_price ?? null,
+      competitor_product_price: null, // products 테이블에 없음
       competitor_brand_name:    r.products?.brands?.name ?? null,
       competitor_brand_slug:    r.products?.brands?.slug ?? null,
     };
@@ -402,12 +400,13 @@ export async function getAnomalyTimeSeries(
     const sb = await supabaseServer();
 
     type RawRow = { detected_on: string; anomaly_type: string };
-    const { data } = await sb
+    const { data, error } = await sb
       .from("anomalies")
       .select("detected_on, anomaly_type")
       .gte("detected_on", dateFrom)
       .lte("detected_on", dateTo);
 
+    if (error) console.error("[getAnomalyTimeSeries] error:", error.code, error.message);
     const rows = (data ?? []) as unknown as RawRow[];
 
     // 날짜 × 타입별 집계

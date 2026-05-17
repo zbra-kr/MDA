@@ -17,8 +17,9 @@ interface PageProps {
 export default async function TrendsPage({ searchParams }: PageProps) {
   const params = await searchParams;
 
-  const today = new Date().toISOString().slice(0, 10);
-  const fourteenDaysAgo = new Date(Date.now() - 13 * 86400000).toISOString().slice(0, 10);
+  const toKST = (d: Date) => d.toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
+  const today = toKST(new Date());
+  const fourteenDaysAgo = toKST(new Date(Date.now() - 13 * 86400000));
 
   const dateFrom = params.from ?? fourteenDaysAgo;
   const dateTo   = params.to   ?? today;
