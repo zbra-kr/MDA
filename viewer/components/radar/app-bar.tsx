@@ -1,30 +1,102 @@
 // viewer/components/radar/app-bar.tsx
 // 2행 sticky 상단바: row1(브랜드·검색·테마·유저) + row2(탭 네비)
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
-import { Search } from "lucide-react";
+import { Search, ChevronDown } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/radar/user-menu";
 
-const TABS = [
-  { href: "/", label: "홈", key: "home" },
-  { href: "/reports/today", label: "대시보드", key: "dashboard" },
-  { href: "/own", label: "자사", key: "own" },
-  { href: "/anomalies", label: "이상 징후", key: "anomalies" },
-  { href: "/products/today", label: "상품", key: "products" },
-  { href: "/brands", label: "브랜드", key: "brands" },
-  { href: "/companies", label: "회사", key: "companies" },
-  { href: "/insights/compare", label: "인사이트", key: "insights" },
-  { href: "/trends", label: "트렌드", key: "trends" },
-  { href: "/matches", label: "매칭", key: "matches" },
-  { href: "/settings", label: "설정", key: "settings" },
-] as const;
+// ─── 탭 정의 ────────────────────────────────────────────────────────────────
 
-const ADMIN_TABS = [
-  { href: "/admin/users", label: "사용자 관리", key: "admin_users" },
-  { href: "/admin/audit", label: "감사 로그", key: "admin_audit" },
-] as const;
+type LinkTab = {
+  type: "link";
+  href: string;
+  label: string;
+  key: string;
+  matchPrefixes?: string[];
+};
+
+type DropdownTab = {
+  type: "dropdown";
+  label: string;
+  key: string;
+  matchPrefixes: string[];
+  children: { href: string; label: string }[];
+};
+
+type TabDef = LinkTab | DropdownTab;
+
+const TABS: TabDef[] = [
+  {
+    type: "dropdown",
+    label: "자사",
+    key: "own",
+    matchPrefixes: ["/", "/own", "/reports"],
+    children: [
+      { href: "/", label: "경쟁현황요약" },
+      { href: "/own", label: "자사운영현황" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "이상탐지",
+    key: "detect",
+    matchPrefixes: ["/anomalies", "/trends"],
+    children: [
+      { href: "/anomalies", label: "이상 징후" },
+      { href: "/trends", label: "트렌드" },
+    ],
+  },
+  {
+    type: "link",
+    href: "/products/today",
+    label: "랭킹",
+    key: "products",
+    matchPrefixes: ["/products"],
+  },
+  {
+    type: "link",
+    href: "/brands",
+    label: "브랜드",
+    key: "brands",
+    matchPrefixes: ["/brands"],
+  },
+  {
+    type: "dropdown",
+    label: "회사",
+    key: "companies",
+    matchPrefixes: ["/companies", "/insights"],
+    children: [
+      { href: "/companies", label: "회사 목록" },
+      { href: "/insights/compare", label: "인사이트" },
+    ],
+  },
+  {
+    type: "link",
+    href: "/matches",
+    label: "매칭",
+    key: "matches",
+    matchPrefixes: ["/matches"],
+  },
+  {
+    type: "link",
+    href: "/settings",
+    label: "설정",
+    key: "settings",
+    matchPrefixes: ["/settings"],
+  },
+];
+
+const ADMIN_TABS: LinkTab[] = [
+  { type: "link", href: "/admin/users", label: "사용자 관리", key: "admin_users" },
+  { type: "link", href: "/admin/audit", label: "감사 로그", key: "admin_audit" },
+];
+
+// ─── 컴포넌트 ────────────────────────────────────────────────────────────────
 
 interface Crumb {
   label: string;
@@ -32,7 +104,6 @@ interface Crumb {
 }
 
 interface Props {
-  currentTab?: string;
   crumbs?: Crumb[];
   tabCounts?: Partial<Record<string, number>>;
   userEmail?: string | null;
@@ -41,14 +112,28 @@ interface Props {
 }
 
 export function AppBar({
-  currentTab = "dashboard",
   crumbs = [],
   tabCounts,
   userEmail,
   userFullName,
   userRole,
 }: Props) {
-  const visibleTabs = [
+  const pathname = usePathname();
+
+  function isTabActive(tab: TabDef): boolean {
+    const prefixes = tab.type === "dropdown" ? tab.matchPrefixes : (tab.matchPrefixes ?? [tab.href]);
+    return prefixes.some((p) => {
+      if (p === "/") return pathname === "/";
+      return pathname === p || pathname.startsWith(p + "/");
+    });
+  }
+
+  function isChildActive(href: string): boolean {
+    if (href === "/") return pathname === "/";
+    return pathname === href || pathname.startsWith(href + "/");
+  }
+
+  const visibleTabs: TabDef[] = [
     ...TABS,
     ...(userRole === "admin" ? ADMIN_TABS : []),
   ];
@@ -57,8 +142,11 @@ export function AppBar({
     <header className="sticky top-0 z-50 bg-canvas/95 backdrop-blur border-b border-border-subtle">
       {/* row 1 */}
       <div className="max-w-[1280px] mx-auto px-10 h-[52px] flex items-center gap-5">
-        {/* brand */}
-        <div className="flex items-center gap-2 shrink-0">
+        {/* brand — 홈으로 이동 */}
+        <Link
+          href="/"
+          className="flex items-center gap-2 shrink-0 hover:opacity-80 transition-opacity"
+        >
           <span className="w-[22px] h-[22px] inline-flex items-center justify-center shrink-0">
             <Image
               src="/brand/bcave-icon.png"
@@ -76,7 +164,7 @@ export function AppBar({
               B.CAVE
             </span>
           </span>
-        </div>
+        </Link>
 
         {/* crumbs */}
         {crumbs.length > 0 && (
@@ -109,7 +197,6 @@ export function AppBar({
 
         <ThemeToggle />
 
-        {/* 사용자 메뉴 */}
         {userEmail ? (
           <UserMenu
             email={userEmail}
@@ -127,40 +214,103 @@ export function AppBar({
       </div>
 
       {/* row 2 — tabs */}
-      <div className="max-w-[1280px] mx-auto px-10 h-10 flex items-center gap-0">
-        <nav className="flex items-center gap-0">
-          {visibleTabs.map((t) => {
-            const active = t.key === currentTab;
-            const count = tabCounts?.[t.key];
+      <div className="max-w-[1280px] mx-auto px-10 h-10 flex items-center">
+        <nav className="flex items-center">
+          {visibleTabs.map((tab) => {
+            const active = isTabActive(tab);
+            const count = tabCounts?.[tab.key];
+
+            if (tab.type === "link") {
+              return (
+                <Link
+                  key={tab.key}
+                  href={tab.href}
+                  className={cn(
+                    "relative h-10 px-3 inline-flex items-center gap-1.5 text-sm font-medium",
+                    "transition-colors",
+                    active
+                      ? "text-fg-primary"
+                      : "text-fg-tertiary hover:text-fg-primary",
+                  )}
+                >
+                  {tab.label}
+                  {count != null && (
+                    <span
+                      className={cn(
+                        "text-2xs font-mono px-1 rounded-sm",
+                        active
+                          ? "bg-selected text-fg-secondary"
+                          : "bg-sunken text-fg-quaternary",
+                      )}
+                    >
+                      {count}
+                    </span>
+                  )}
+                  {active && (
+                    <span className="absolute left-0 right-0 bottom-0 h-0.5 bg-fg-primary" />
+                  )}
+                </Link>
+              );
+            }
+
+            // dropdown tab
             return (
-              <Link
-                key={t.key}
-                href={t.href}
-                className={cn(
-                  "relative h-10 px-3 inline-flex items-center gap-1.5 text-sm font-medium",
-                  "transition-colors",
-                  active
-                    ? "text-fg-primary"
-                    : "text-fg-tertiary hover:text-fg-primary",
-                )}
-              >
-                {t.label}
-                {count != null && (
-                  <span
-                    className={cn(
-                      "text-2xs font-mono px-1 rounded-sm",
-                      active
-                        ? "bg-selected text-fg-secondary"
-                        : "bg-sunken text-fg-quaternary",
-                    )}
-                  >
-                    {count}
-                  </span>
-                )}
-                {active && (
-                  <span className="absolute left-0 right-0 bottom-0 h-0.5 bg-fg-primary" />
-                )}
-              </Link>
+              <div key={tab.key} className="relative group/tab">
+                {/* 탭 헤더 */}
+                <div
+                  className={cn(
+                    "relative h-10 px-3 inline-flex items-center gap-1 text-sm font-medium",
+                    "select-none cursor-default transition-colors",
+                    active
+                      ? "text-fg-primary"
+                      : "text-fg-tertiary group-hover/tab:text-fg-primary",
+                  )}
+                >
+                  {tab.label}
+                  <ChevronDown
+                    size={12}
+                    className="transition-transform duration-150 group-hover/tab:rotate-180"
+                  />
+                  {count != null && (
+                    <span
+                      className={cn(
+                        "text-2xs font-mono px-1 rounded-sm",
+                        active
+                          ? "bg-selected text-fg-secondary"
+                          : "bg-sunken text-fg-quaternary",
+                      )}
+                    >
+                      {count}
+                    </span>
+                  )}
+                  {active && (
+                    <span className="absolute left-0 right-0 bottom-0 h-0.5 bg-fg-primary" />
+                  )}
+                </div>
+
+                {/* 드롭다운 패널 — pt-1은 호버 브릿지 역할 */}
+                <div className="absolute top-full left-0 hidden group-hover/tab:block z-50 pt-1">
+                  <div className="min-w-[148px] py-1 rounded-md border border-border bg-canvas shadow-md">
+                    {tab.children.map((child) => {
+                      const childActive = isChildActive(child.href);
+                      return (
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          className={cn(
+                            "block px-3 py-1.5 text-sm transition-colors",
+                            childActive
+                              ? "text-fg-primary font-medium bg-selected"
+                              : "text-fg-secondary hover:text-fg-primary hover:bg-hover",
+                          )}
+                        >
+                          {child.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
             );
           })}
         </nav>
