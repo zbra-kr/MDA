@@ -4,11 +4,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Search, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserMenu } from "@/components/radar/user-menu";
+import { SearchBar } from "@/components/radar/search-bar";
 
 // ─── 탭 정의 ────────────────────────────────────────────────────────────────
 
@@ -32,10 +33,17 @@ type TabDef = LinkTab | DropdownTab;
 
 const TABS: TabDef[] = [
   {
+    type: "link",
+    href: "/",
+    label: "대시보드",
+    key: "dashboard",
+    matchPrefixes: ["/", "/reports"],
+  },
+  {
     type: "dropdown",
     label: "자사",
     key: "own",
-    matchPrefixes: ["/", "/own", "/reports"],
+    matchPrefixes: ["/own"],
     children: [
       { href: "/", label: "경쟁현황요약" },
       { href: "/own", label: "자사운영현황" },
@@ -187,13 +195,7 @@ export function AppBar({
         <div className="flex-1" />
 
         {/* quick search */}
-        <div className="hidden md:flex items-center gap-2 h-7 px-2.5 rounded-md border border-border text-sm text-fg-tertiary">
-          <Search size={13} />
-          <span>브랜드 · 상품 검색</span>
-          <kbd className="ml-2 text-2xs font-mono px-1 py-px rounded-sm bg-sunken border border-border-hair text-fg-quaternary">
-            /
-          </kbd>
-        </div>
+        <SearchBar />
 
         <ThemeToggle />
 
