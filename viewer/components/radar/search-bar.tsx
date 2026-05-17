@@ -1,32 +1,42 @@
 // viewer/components/radar/search-bar.tsx
-// 커맨드 팔레트 — 클릭 또는 / 키로 열림
+// 브랜드·상품 실시간 검색 — 클릭 또는 / 키로 열림
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Search, X } from "lucide-react";
-import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { Search, X, ExternalLink } from "lucide-react";
 
-const NAV_ITEMS = [
-  { label: "대시보드",     desc: "메인 경쟁현황 요약",      href: "/" },
-  { label: "자사운영현황", desc: "자사 KPI · 재고",          href: "/own" },
-  { label: "이상 징후",    desc: "이상탐지 목록",            href: "/anomalies" },
-  { label: "트렌드",       desc: "탐지 유형별 시계열",       href: "/trends" },
-  { label: "랭킹",         desc: "오늘 상품 랭킹",           href: "/products/today" },
-  { label: "브랜드",       desc: "브랜드 목록 · 경쟁사 관리", href: "/brands" },
-  { label: "회사 목록",    desc: "회사 정보",                href: "/companies" },
-  { label: "인사이트",     desc: "비교 분석",                href: "/insights/compare" },
-  { label: "매칭",         desc: "자사 · 경쟁 상품 매칭",    href: "/matches" },
-  { label: "설정",         desc: "시스템 설정",              href: "/settings" },
-];
+interface BrandResult {
+  id: string;
+  name: string;
+  slug: string | null;
+  is_competitor: boolean;
+  is_own: boolean;
+}
+
+interface ProductResult {
+  id: string;
+  name: string;
+  musinsa_no: string | null;
+  thumbnail_url: string | null;
+  url: string | null;
+  brands: { name: string; slug: string } | null;
+}
+
+interface SearchResults {
+  brands: BrandResult[];
+  products: ProductResult[];
+}
 
 export function SearchBar() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [activeIdx, setActiveIdx] = useState(0);
+  const [results, setResults] = useState<SearchResults>({ brands: [], products: [] });
+  const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // / 단축키로 열기
+  // / 단축키
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement).tagName;
@@ -42,35 +52,37 @@ export function SearchBar() {
   useEffect(() => {
     if (open) {
       setQuery("");
-      setActiveIdx(0);
+      setResults({ brands: [], products: [] });
       setTimeout(() => inputRef.current?.focus(), 30);
     }
   }, [open]);
 
-  const filtered = NAV_ITEMS.filter((item) => {
-    if (!query) return true;
-    const q = query.toLowerCase();
-    return item.label.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q);
-  });
-
-  function select(href: string) {
-    setOpen(false);
-    router.push(href);
-  }
-
-  function onKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setActiveIdx((i) => Math.min(i + 1, filtered.length - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setActiveIdx((i) => Math.max(i - 1, 0));
-    } else if (e.key === "Enter" && filtered[activeIdx]) {
-      select(filtered[activeIdx].href);
-    } else if (e.key === "Escape") {
-      setOpen(false);
+  // 디바운스 검색
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!query.trim()) {
+      setResults({ brands: [], products: [] });
+      setLoading(false);
+      return;
     }
-  }
+    setLoading(true);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        const data: SearchResults = await res.json();
+        setResults(data);
+      } catch {
+        setResults({ brands: [], products: [] });
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [query]);
+
+  const hasResults = results.brands.length > 0 || results.products.length > 0;
 
   return (
     <>
@@ -86,53 +98,128 @@ export function SearchBar() {
         </kbd>
       </button>
 
-      {/* 오버레이 */}
+      {/* 검색 오버레이 */}
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center pt-24 px-4 bg-black/40 backdrop-blur-[2px]"
+          className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-black/40 backdrop-blur-[2px]"
           onClick={() => setOpen(false)}
         >
           <div
-            className="w-full max-w-md rounded-xl border border-border bg-canvas shadow-2xl overflow-hidden"
+            className="w-full max-w-lg rounded-xl border border-border bg-canvas shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* 입력 영역 */}
+            {/* 입력 */}
             <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border-subtle">
               <Search size={14} className="text-fg-quaternary shrink-0" />
               <input
                 ref={inputRef}
                 value={query}
-                onChange={(e) => { setQuery(e.target.value); setActiveIdx(0); }}
-                onKeyDown={onKeyDown}
-                placeholder="페이지 이동..."
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}
+                placeholder="브랜드 또는 상품명 입력..."
                 className="flex-1 bg-transparent text-sm text-fg-primary placeholder:text-fg-quaternary outline-none"
               />
-              <button
-                onClick={() => setOpen(false)}
-                className="text-fg-quaternary hover:text-fg-secondary transition-colors"
-              >
+              {loading && (
+                <span className="text-2xs text-fg-quaternary">검색 중...</span>
+              )}
+              <button onClick={() => setOpen(false)} className="text-fg-quaternary hover:text-fg-secondary transition-colors">
                 <X size={14} />
               </button>
             </div>
 
-            {/* 결과 목록 */}
-            <div className="py-1 max-h-72 overflow-y-auto">
-              {filtered.map((item, i) => (
-                <button
-                  key={item.href}
-                  onClick={() => select(item.href)}
-                  onMouseEnter={() => setActiveIdx(i)}
-                  className={`w-full text-left px-4 py-2.5 flex items-center gap-3 transition-colors ${
-                    i === activeIdx ? "bg-hover" : ""
-                  }`}
-                >
-                  <span className="text-sm font-medium text-fg-primary">{item.label}</span>
-                  <span className="text-xs text-fg-tertiary">{item.desc}</span>
-                </button>
-              ))}
-              {filtered.length === 0 && (
-                <p className="px-4 py-5 text-sm text-fg-tertiary text-center">
-                  일치하는 페이지가 없습니다.
+            {/* 결과 */}
+            <div className="max-h-[420px] overflow-y-auto">
+              {/* 브랜드 결과 */}
+              {results.brands.length > 0 && (
+                <section>
+                  <p className="px-4 pt-3 pb-1.5 text-2xs font-medium uppercase tracking-wide text-fg-quaternary">
+                    브랜드
+                  </p>
+                  {results.brands.map((b) => (
+                    <a
+                      key={b.id}
+                      href={`/brands`}
+                      onClick={() => setOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-hover transition-colors"
+                    >
+                      <div className="w-7 h-7 rounded-sm bg-sunken border border-border-hair flex items-center justify-center shrink-0">
+                        <span className="text-2xs font-mono font-semibold text-fg-tertiary">
+                          {b.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <span className="flex-1 text-sm font-medium text-fg-primary truncate">
+                        {b.name}
+                      </span>
+                      {b.is_own && (
+                        <span className="text-2xs font-mono px-1.5 py-0.5 rounded-sm bg-selected text-fg-secondary border border-border-hair shrink-0">
+                          자사
+                        </span>
+                      )}
+                      {b.is_competitor && !b.is_own && (
+                        <span className="text-2xs font-mono px-1.5 py-0.5 rounded-sm bg-sunken text-fg-tertiary border border-border-hair shrink-0">
+                          경쟁사
+                        </span>
+                      )}
+                    </a>
+                  ))}
+                </section>
+              )}
+
+              {/* 상품 결과 */}
+              {results.products.length > 0 && (
+                <section>
+                  <p className="px-4 pt-3 pb-1.5 text-2xs font-medium uppercase tracking-wide text-fg-quaternary">
+                    상품
+                  </p>
+                  {results.products.map((p) => {
+                    const href = p.url ?? (p.musinsa_no ? `https://www.musinsa.com/products/${p.musinsa_no}` : "#");
+                    const isExternal = href.startsWith("http");
+                    return (
+                      <a
+                        key={p.id}
+                        href={href}
+                        target={isExternal ? "_blank" : undefined}
+                        rel={isExternal ? "noopener noreferrer" : undefined}
+                        onClick={() => setOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 hover:bg-hover transition-colors"
+                      >
+                        <div className="w-7 h-7 rounded-sm bg-sunken border border-border-hair overflow-hidden flex items-center justify-center shrink-0">
+                          {p.thumbnail_url ? (
+                            <Image
+                              src={p.thumbnail_url}
+                              alt={p.name}
+                              width={28}
+                              height={28}
+                              className="object-cover w-full h-full"
+                            />
+                          ) : (
+                            <span className="text-2xs font-mono text-fg-quaternary">IMG</span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-fg-primary truncate">{p.name}</p>
+                          <p className="text-xs text-fg-tertiary">{p.brands?.name ?? "—"}</p>
+                        </div>
+                        {isExternal && (
+                          <ExternalLink size={12} className="text-fg-quaternary shrink-0" />
+                        )}
+                      </a>
+                    );
+                  })}
+                </section>
+              )}
+
+              {/* 빈 상태 */}
+              {query && !loading && !hasResults && (
+                <p className="px-4 py-7 text-sm text-fg-tertiary text-center">
+                  &ldquo;{query}&rdquo;에 해당하는 브랜드·상품이 없습니다.
+                </p>
+              )}
+
+              {/* 초기 상태 */}
+              {!query && (
+                <p className="px-4 py-7 text-sm text-fg-tertiary text-center">
+                  브랜드 또는 상품명을 입력하세요.
                 </p>
               )}
             </div>

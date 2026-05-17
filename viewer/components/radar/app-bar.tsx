@@ -34,16 +34,16 @@ type TabDef = LinkTab | DropdownTab;
 const TABS: TabDef[] = [
   {
     type: "link",
-    href: "/",
+    href: "/reports/today",
     label: "대시보드",
     key: "dashboard",
-    matchPrefixes: ["/", "/reports"],
+    matchPrefixes: ["/reports"],
   },
   {
     type: "dropdown",
     label: "자사",
     key: "own",
-    matchPrefixes: ["/own"],
+    matchPrefixes: ["/own", "/"],
     children: [
       { href: "/", label: "경쟁현황요약" },
       { href: "/own", label: "자사운영현황" },
@@ -150,9 +150,9 @@ export function AppBar({
     <header className="sticky top-0 z-50 bg-canvas/95 backdrop-blur border-b border-border-subtle">
       {/* row 1 */}
       <div className="max-w-[1280px] mx-auto px-10 h-[52px] flex items-center gap-5">
-        {/* brand — 홈으로 이동 */}
+        {/* brand — 대시보드로 이동 */}
         <Link
-          href="/"
+          href="/reports/today"
           className="flex items-center gap-2 shrink-0 hover:opacity-80 transition-opacity"
         >
           <span className="w-[22px] h-[22px] inline-flex items-center justify-center shrink-0">
