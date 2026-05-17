@@ -249,6 +249,18 @@ export function TrendsClient({ anomalies, timeSeries, dateFrom, dateTo, selected
     new Set(selectedTypes.length ? selectedTypes : []),
   );
   const [modalAnomaly, setModalAnomaly] = useState<AnomalyRow | null>(null);
+  const [localFrom, setLocalFrom] = useState(dateFrom);
+  const [localTo,   setLocalTo]   = useState(dateTo);
+
+  const todayKST = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
+
+  function navigate(from: string, to: string, types: Set<AnomalyType>) {
+    const p = new URLSearchParams();
+    p.set("from", from);
+    p.set("to", to);
+    if (types.size) p.set("types", [...types].join(","));
+    router.push(`${pathname}?${p.toString()}`);
+  }
 
   // 필터 적용
   const filtered = useMemo(() => {
@@ -265,21 +277,36 @@ export function TrendsClient({ anomalies, timeSeries, dateFrom, dateTo, selected
     });
   }
 
-  // 데이터 없음 카드
-  if (!anomalies.length) {
-    return (
-      <div className="bg-surface border border-dashed border-border rounded-md py-20 flex flex-col items-center text-center">
-        <p className="text-sm text-fg-tertiary mb-1">탐지 데이터 없음</p>
-        <p className="text-xs text-fg-quaternary">
-          5/22 이후 worker 가동 시 이상탐지 결과가 여기에 표시됩니다.
-        </p>
-      </div>
-    );
-  }
-
-  return (
+  const controls = (
     <>
-      {/* 필터 행 */}
+      {/* 날짜 범위 선택 */}
+      <div className="flex items-center gap-2 flex-wrap mb-4">
+        <span className="text-xs text-fg-tertiary">기간:</span>
+        <input
+          type="date"
+          value={localFrom}
+          max={localTo}
+          onChange={(e) => setLocalFrom(e.target.value)}
+          className="bg-raised border border-border rounded px-2 py-1 text-xs font-mono text-fg-primary focus:outline-none focus:ring-1 focus:ring-border"
+        />
+        <span className="text-xs text-fg-quaternary">~</span>
+        <input
+          type="date"
+          value={localTo}
+          min={localFrom}
+          max={todayKST}
+          onChange={(e) => setLocalTo(e.target.value)}
+          className="bg-raised border border-border rounded px-2 py-1 text-xs font-mono text-fg-primary focus:outline-none focus:ring-1 focus:ring-border"
+        />
+        <button
+          onClick={() => navigate(localFrom, localTo, activeTypes)}
+          className="px-3 py-1 rounded text-xs font-medium bg-fg-primary text-canvas hover:opacity-80 transition-opacity"
+        >
+          조회
+        </button>
+      </div>
+
+      {/* 탐지자 필터 행 */}
       <div className="flex items-center gap-2 flex-wrap mb-5">
         <span className="text-xs text-fg-tertiary">탐지자:</span>
         {ALL_TYPES.map((t) => {
@@ -311,6 +338,27 @@ export function TrendsClient({ anomalies, timeSeries, dateFrom, dateTo, selected
           </button>
         )}
       </div>
+    </>
+  );
+
+  // 데이터 없음 카드 (날짜 선택은 유지)
+  if (!anomalies.length) {
+    return (
+      <>
+        {controls}
+        <div className="bg-surface border border-dashed border-border rounded-md py-16 flex flex-col items-center text-center">
+          <p className="text-sm text-fg-tertiary mb-1">탐지 데이터 없음</p>
+          <p className="text-xs text-fg-quaternary">
+            해당 기간({localFrom} ~ {localTo})에 탐지된 이상 신호가 없습니다.
+          </p>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      {controls}
 
       {/* 시계열 */}
       <MiniTimeSeries data={timeSeries} />
